@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}All Episodes - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">All Episodes</h1>
+            <p class="text-gray-600 mt-1">{{ total }} episodes across all profiles</p>
+        </div>
+    </div>
+
+    <!-- Episodes List -->
+    {% if episodes %}
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="divide-y divide-gray-100">
+            {% for episode in episodes %}
+            <div class="p-6 hover:bg-gray-50 transition">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                                {{ episode.episode_id }}
+                            </span>
+                            <span class="text-sm text-gray-500">
+                                {{ episode.date.strftime('%B %d, %Y') if episode.date else 'Unknown date' }}
+                            </span>
+                            {% if episode.duration_seconds %}
+                            <span class="text-sm text-gray-500">
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ (episode.duration_seconds // 60) }}:{{ '%02d' % (episode.duration_seconds % 60) }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                            <a href="/episodes/{{ episode.id }}" class="hover:text-purple-600">{{ episode.title }}</a>
+                        </h3>
+                        {% if episode.summary %}
+                        <p class="text-gray-600 text-sm mb-3">{{ episode.summary }}</p>
+                        {% endif %}
+                        {% if episode.topics_covered %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for topic in episode.topics_covered[:5] %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">{{ topic }}</span>
+                            {% endfor %}
+                            {% if episode.topics_covered|length > 5 %}
+                            <span class="text-xs text-gray-500">+{{ episode.topics_covered|length - 5 }} more</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center space-x-3 ml-4">
+                        {% if episode.audio_path %}
+                        <a href="/episodes/{{ episode.id }}/download" class="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition text-sm">
+                            <i class="fas fa-download mr-1"></i> Download
+                        </a>
+                        {% endif %}
+                        <a href="/episodes/{{ episode.id }}" class="px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition text-sm">
+                            <i class="fas fa-play mr-1"></i> Play
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total > per_page %}
+    <div class="flex justify-center space-x-2">
+        {% if page > 1 %}
+        <a href="/episodes?page={{ page - 1 }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-chevron-left mr-2"></i> Previous
+        </a>
+        {% endif %}
+
+        <span class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg">
+            Page {{ page }} of {{ ((total - 1) // per_page) + 1 }}
+        </span>
+
+        {% if page * per_page < total %}
+        <a href="/episodes?page={{ page + 1 }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Next <i class="fas fa-chevron-right ml-2"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+        <div class="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-podcast text-purple-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Episodes Yet</h3>
+        <p class="text-gray-500 mb-4">Generate your first podcast episode to see it here</p>
+        <a href="/profiles" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            <i class="fas fa-microphone mr-2"></i> View Profiles
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

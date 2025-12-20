@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Generation Status - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<!-- 
+    The initial load of this page includes the partial directly.
+    The partial itself contains the HTMX attributes to poll itself if the job is running.
+-->
+{% include "generate/status_partial.html" %}
+
+{% endblock %}

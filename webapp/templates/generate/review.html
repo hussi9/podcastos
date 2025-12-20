@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Review Editor - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div
+        class="flex items-start justify-between sticky top-0 bg-white/95 backdrop-blur z-10 py-4 border-b border-gray-100">
+        <div>
+            <div class="flex items-center space-x-2 text-sm text-slate-500 mb-2">
+                <a href="/" class="hover:text-slate-800 transition">Dashboard</a>
+                <span class="text-slate-300">/</span>
+                <span>Job: {{ job.job_id }}</span>
+            </div>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Review & Edit</h1>
+            <p class="text-slate-500">Edit the script below. Audio will be generated from the <strong>edited</strong>
+                text.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="saveAndApprove()" id="approveBtn"
+                class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center">
+                <i class="fas fa-magic mr-2"></i> Generate Audio
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Editor Form -->
+    <form id="scriptForm" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 bg-slate-50">
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Episode Title</label>
+            <input type="text" name="episode_title" value="{{ script.episode_title }}"
+                class="w-full text-lg font-bold text-slate-900 bg-transparent border-none focus:ring-0 p-0 placeholder-slate-300">
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            <!-- Intro -->
+            <div class="p-6 bg-indigo-50/30 group">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-4 flex items-center">
+                    Introduction
+                    <span
+                        class="ml-2 opacity-0 group-hover:opacity-100 transition text-xs text-indigo-400 font-normal">(Editable)</span>
+                </h3>
+                <div class="space-y-4" id="intro-container">
+                    {% for line in script.intro %}
+                    <div class="flex gap-4 items-start dialogue-line">
+                        <select name="intro[{{loop.index0}}][speaker]"
+                            class="w-24 flex-shrink-0 text-sm font-bold text-slate-700 bg-transparent border-none focus:ring-0 text-right cursor-pointer">
+                            <option value="Raj" {% if line.speaker=='Raj' %}selected{% endif %}>Raj</option>
+                            <option value="Priya" {% if line.speaker=='Priya' %}selected{% endif %}>Priya</option>
+                        </select>
+                        <textarea name="intro[{{loop.index0}}][text]" rows="2"
+                            class="flex-1 text-slate-800 font-serif leading-relaxed bg-transparent border-none focus:ring-2 focus:ring-indigo-200 rounded p-2 resize-y">{{ line.text }}</textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Segments -->
+            <div id="segments-container">
+                {% for segment in script.segments %}
+                {% set seg_idx = loop.index0 %}
+                <div class="p-6 segment-block">
+                    <div class="flex items-center justify-between mb-4">
+                        <input type="text" name="segments[{{seg_idx}}][topic_title]" value="{{ segment.topic_title }}"
+                            class="text-sm font-bold uppercase text-slate-500 bg-transparent border-none focus:ring-0 w-full">
+                        <input type="hidden" name="segments[{{seg_idx}}][topic_id]" value="{{ segment.topic_id }}">
+                    </div>
+                    <div class="space-y-4">
+                        {% for line in segment.dialogue %}
+                        <div class="flex gap-4 items-start dialogue-line">
+                            <select name="segments[{{seg_idx}}][dialogue][{{loop.index0}}][speaker]"
+                                class="w-24 flex-shrink-0 text-sm font-bold text-slate-700 bg-transparent border-none focus:ring-0 text-right cursor-pointer">
+                                <option value="Raj" {% if line.speaker=='Raj' %}selected{% endif %}>Raj</option>
+                                <option value="Priya" {% if line.speaker=='Priya' %}selected{% endif %}>Priya</option>
+                            </select>
+                            <textarea name="segments[{{seg_idx}}][dialogue][{{loop.index0}}][text]" rows="2"
+                                class="flex-1 text-slate-800 font-serif leading-relaxed bg-transparent border-none focus:ring-2 focus:ring-indigo-200 rounded p-2 resize-y">{{ line.text }}</textarea>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Outro -->
+            <div class="p-6 bg-indigo-50/30 group">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-4 flex items-center">
+                    Closing
+                    <span
+                        class="ml-2 opacity-0 group-hover:opacity-100 transition text-xs text-indigo-400 font-normal">(Editable)</span>
+                </h3>
+                <div class="space-y-4" id="outro-container">
+                    {% for line in script.outro %}
+                    <div class="flex gap-4 items-start dialogue-line">
+                        <select name="outro[{{loop.index0}}][speaker]"
+                            class="w-24 flex-shrink-0 text-sm font-bold text-slate-700 bg-transparent border-none focus:ring-0 text-right cursor-pointer">
+                            <option value="Raj" {% if line.speaker=='Raj' %}selected{% endif %}>Raj</option>
+                            <option value="Priya" {% if line.speaker=='Priya' %}selected{% endif %}>Priya</option>
+                        </select>
+                        <textarea name="outro[{{loop.index0}}][text]" rows="2"
+                            class="flex-1 text-slate-800 font-serif leading-relaxed bg-transparent border-none focus:ring-2 focus:ring-indigo-200 rounded p-2 resize-y">{{ line.text }}</textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Simple auto-resize for textareas
+    document.querySelectorAll('textarea').forEach(el => {
+        el.style.height = el.scrollHeight + 'px';
+        el.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+
+    async function saveAndApprove() {
+        const btn = document.getElementById('approveBtn');
+        const form = document.getElementById('scriptForm');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+
+        // Convert structured form data to JSON compatible with backend
+        // We need to parse the flat name attributes back into the nested structure 
+        // OR we can just use a smarter FormData parser.
+        // For simplicity, let's use a specialized collection logic.
+
+        const data = {
+            episode_title: form.querySelector('[name="episode_title"]').value,
+            intro: [],
+            segments: [],
+            outro: []
+        };
+
+        // Collect Intro
+        document.querySelectorAll('#intro-container .dialogue-line').forEach(row => {
+            data.intro.push({
+                speaker: row.querySelector('select').value,
+                text: row.querySelector('textarea').value
+            });
+        });
+
+        // Collect Outro
+        document.querySelectorAll('#outro-container .dialogue-line').forEach(row => {
+            data.outro.push({
+                speaker: row.querySelector('select').value,
+                text: row.querySelector('textarea').value
+            });
+        });
+
+        // Collect Segments
+        document.querySelectorAll('.segment-block').forEach((block, idx) => {
+            const segData = {
+                topic_title: block.querySelector(`[name="segments[${idx}][topic_title]"]`).value,
+                topic_id: block.querySelector(`[name="segments[${idx}][topic_id]"]`).value,
+                dialogue: []
+            };
+
+            block.querySelectorAll('.dialogue-line').forEach(row => {
+                segData.dialogue.push({
+                    speaker: row.querySelector('select').value,
+                    text: row.querySelector('textarea').value
+                });
+            });
+            data.segments.push(segData);
+        });
+
+        try {
+            const response = await fetch('/jobs/{{ job.job_id }}/approve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                window.location.href = '/jobs/{{ job.job_id }}';
+            } else {
+                alert('Error saving script');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Retry';
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Retry';
+        }
+    }
+</script>
+{% endblock %}

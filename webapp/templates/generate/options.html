@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Episode - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Header -->
+    <div>
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="/profiles/{{ profile.id }}" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Generate Episode</h1>
+        </div>
+        <p class="text-gray-600">Configure and start podcast generation for <strong>{{ profile.name }}</strong></p>
+    </div>
+
+    <!-- Generation Form -->
+    <form method="POST" class="space-y-6">
+        <!-- Pipeline Stages -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-tasks mr-2 text-purple-600"></i> Generation Pipeline
+            </h2>
+
+            <div class="flex items-center justify-between">
+                {% set stages = [
+                ('content_gathering', 'Content', 'fa-download'),
+                ('research', 'Research', 'fa-search'),
+                ('scripting', 'Script', 'fa-file-alt'),
+                ('review', 'Review', 'fa-check-double'),
+                ('audio', 'Audio', 'fa-volume-up')
+                ] %}
+                {% for stage_id, stage_name, icon in stages %}
+                <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                        <i class="fas {{ icon }} text-gray-500"></i>
+                    </div>
+                    <span class="text-sm text-gray-600">{{ stage_name }}</span>
+                </div>
+                {% if not loop.last %}
+                <div class="flex-1 h-0.5 bg-gray-200 mx-2"></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Content Settings -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-sliders-h mr-2 text-purple-600"></i> Content Settings
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Topics</label>
+                    <select name="topic_count"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        {% for i in range(3, 8) %}
+                        <option value="{{ i }}" {% if i==profile.topic_count %}selected{% endif %}>{{ i }} topics
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Duration</label>
+                    <select name="duration"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="5" {% if profile.target_duration_minutes==5 %}selected{% endif %}>5 minutes
+                            (Short)</option>
+                        <option value="10" {% if profile.target_duration_minutes==10 %}selected{% endif %}>10 minutes
+                            (Standard)</option>
+                        <option value="15" {% if profile.target_duration_minutes==15 %}selected{% endif %}>15 minutes
+                            (Extended)</option>
+                        <option value="20" {% if profile.target_duration_minutes==20 %}selected{% endif %}>20 minutes
+                            (Long)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Options -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-brain mr-2 text-purple-600"></i> Research Options
+            </h2>
+
+            <div class="space-y-4">
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" name="deep_research" checked
+                        class="mt-1 h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
+                    <div>
+                        <span class="font-medium text-gray-900">Deep Research Mode</span>
+                        <p class="text-sm text-gray-500">Use AI to find additional facts, statistics, and expert
+                            opinions</p>
+                    </div>
+                </label>
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" name="use_continuity" checked
+                        class="mt-1 h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
+                    <div>
+                        <span class="font-medium text-gray-900">Episode Continuity</span>
+                        <p class="text-sm text-gray-500">Reference previous episodes and avoid repeating topics</p>
+                    </div>
+                </label>
+                <label class="flex items-start space-x-3">
+                    <input type="checkbox" name="editorial_review"
+                        class="mt-1 h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
+                    <div>
+                        <span class="font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-edit text-indigo-500 mr-2"></i> Studio Mode (Human Review)
+                        </span>
+                        <p class="text-sm text-gray-500">Pause generation after scripting to allow you to review and
+                            approve the text manually.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Audio Settings -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-headphones mr-2 text-purple-600"></i> Audio Settings
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">TTS Model</label>
+                    <select name="tts_model"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="gemini-2.5-flash-preview-tts" selected>Gemini 2.5 Flash TTS</option>
+                        <option value="gemini-2.5-pro-preview-tts">Gemini 2.5 Pro TTS</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Audio Quality</label>
+                    <select name="audio_quality"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="standard">Standard (24kHz)</option>
+                        <option value="high" selected>High Quality</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Focus/Override -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-crosshairs mr-2 text-purple-600"></i> Episode Focus (Optional)
+            </h2>
+            <textarea name="focus" rows="3"
+                placeholder="Optionally specify a particular focus for this episode, e.g., 'Focus more on the recent H-1B lottery changes' or 'Include more career advice'"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-purple-500 focus:border-purple-500"></textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end space-x-4">
+            <a href="/profiles/{{ profile.id }}"
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                Cancel
+            </a>
+            <button type="submit"
+                class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center">
+                <i class="fas fa-rocket mr-2"></i> Start Generation
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

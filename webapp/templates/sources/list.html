@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Content Sources - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center space-x-3 mb-2">
+                <a href="/profiles/{{ profile.id }}" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Content Sources</h1>
+            </div>
+            <p class="text-gray-600">Manage where {{ profile.name }} gets its content</p>
+        </div>
+        <a href="/profiles/{{ profile.id }}/sources/new" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            <i class="fas fa-plus mr-2"></i> Add Source
+        </a>
+    </div>
+
+    <!-- Sources List -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        {% if sources %}
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left px-6 py-4 text-sm font-medium text-gray-700">Source</th>
+                    <th class="text-left px-6 py-4 text-sm font-medium text-gray-700">Type</th>
+                    <th class="text-left px-6 py-4 text-sm font-medium text-gray-700">Categories</th>
+                    <th class="text-center px-6 py-4 text-sm font-medium text-gray-700">Priority</th>
+                    <th class="text-center px-6 py-4 text-sm font-medium text-gray-700">Status</th>
+                    <th class="text-right px-6 py-4 text-sm font-medium text-gray-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for source in sources %}
+                <tr class="hover:bg-gray-50 {{ 'opacity-50' if not source.is_active }}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center
+                                {% if source.source_type == 'reddit' %}bg-orange-100 text-orange-600
+                                {% elif source.source_type == 'rss' %}bg-blue-100 text-blue-600
+                                {% elif source.source_type == 'google_news' %}bg-green-100 text-green-600
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {% if source.source_type == 'reddit' %}
+                                <i class="fab fa-reddit-alien"></i>
+                                {% elif source.source_type == 'rss' %}
+                                <i class="fas fa-rss"></i>
+                                {% elif source.source_type == 'google_news' %}
+                                <i class="fab fa-google"></i>
+                                {% else %}
+                                <i class="fas fa-globe"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-900">{{ source.name }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {% if source.source_type == 'reddit' %}
+                                    r/{{ source.config.get('subreddit', 'unknown') }}
+                                    {% elif source.source_type == 'rss' %}
+                                    {{ source.config.get('url', 'No URL')[:50] }}...
+                                    {% elif source.source_type == 'google_news' %}
+                                    "{{ source.config.get('query', 'No query') }}"
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if source.source_type == 'reddit' %}bg-orange-100 text-orange-700
+                            {% elif source.source_type == 'rss' %}bg-blue-100 text-blue-700
+                            {% elif source.source_type == 'google_news' %}bg-green-100 text-green-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ source.source_type }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1">
+                            {% for cat in (source.categories or [])[:3] %}
+                            <span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">{{ cat }}</span>
+                            {% endfor %}
+                            {% if (source.categories or [])|length > 3 %}
+                            <span class="text-xs text-gray-500">+{{ (source.categories|length) - 3 }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center">
+                            {% for i in range(10) %}
+                            <div class="w-2 h-2 rounded-full mx-0.5 {{ 'bg-purple-500' if i < source.priority else 'bg-gray-200' }}"></div>
+                            {% endfor %}
+                        </div>
+                        <span class="text-xs text-gray-500">{{ source.priority }}/10</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <form method="POST" action="/profiles/{{ profile.id }}/sources/{{ source.id }}/toggle" class="inline">
+                            <button type="submit" class="px-3 py-1 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if source.is_active else 'bg-gray-100 text-gray-500' }}">
+                                {{ 'Active' if source.is_active else 'Inactive' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <form method="POST" action="/profiles/{{ profile.id }}/sources/{{ source.id }}/delete"
+                              class="inline" onsubmit="return confirm('Delete this source?')">
+                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-rss text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Content Sources</h3>
+            <p class="text-gray-500 mb-4">Add sources to start gathering content for your podcast</p>
+            <a href="/profiles/{{ profile.id }}/sources/new" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-plus mr-2"></i> Add Your First Source
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Box -->
+    <div class="bg-blue-50 rounded-xl p-6">
+        <h3 class="font-medium text-blue-900 mb-2"><i class="fas fa-info-circle mr-2"></i>About Content Sources</h3>
+        <div class="grid md:grid-cols-3 gap-4 text-sm text-blue-800">
+            <div>
+                <strong class="text-orange-600"><i class="fab fa-reddit-alien mr-1"></i>Reddit</strong>
+                <p>Pulls top posts from subreddits. Great for community discussions and trending topics.</p>
+            </div>
+            <div>
+                <strong class="text-blue-600"><i class="fas fa-rss mr-1"></i>RSS Feeds</strong>
+                <p>News articles from publications. Best for authoritative news coverage.</p>
+            </div>
+            <div>
+                <strong class="text-green-600"><i class="fab fa-google mr-1"></i>Google News</strong>
+                <p>Search-based news. Useful for specific topics or breaking news.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

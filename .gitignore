@@ -1,0 +1,49 @@
+# Environment
+.env
+.env.local
+venv/
+.venv/
+
+# Secrets & Credentials
+config/google-service-account.json
+*.json.bak
+credentials/
+
+# Logs
+*.log
+*.pid
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+*.egg
+
+# Output files (generated content)
+output/
+*.mp3
+*.wav
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+.docker/

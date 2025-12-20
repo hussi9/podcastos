@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Add Host - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8">
+    <!-- Header -->
+    <div>
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="/profiles/{{ profile.id }}" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Add Host</h1>
+        </div>
+        <p class="text-gray-600">Add a new host to {{ profile.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="space-y-6">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Host Details</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Host Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., Raj, Priya, Alex"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p class="text-xs text-gray-500 mt-1">This name will be used in the script (e.g., "Raj: Hello everyone...")</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
+                    <select name="voice_name" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        {% for voice in voices %}
+                        <option value="{{ voice }}" {{ 'selected' if voice == 'Puck' }}>{{ voice }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Gemini TTS voice for this host</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persona / Background</label>
+                    <textarea name="persona" rows="3" placeholder="Describe who this host is..."
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Background story that shapes how this host speaks and what perspectives they bring</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Speaking Style</label>
+                    <input type="text" name="speaking_style" placeholder="e.g., Practical, empathetic, curious..."
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Expertise Areas</label>
+                    <input type="text" name="expertise_areas" placeholder="e.g., immigration, tech, finance (comma-separated)"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p class="text-xs text-gray-500 mt-1">Topics this host has expertise in (comma-separated)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Preview -->
+        <div class="bg-purple-50 rounded-xl p-6">
+            <h3 class="font-medium text-purple-900 mb-2"><i class="fas fa-info-circle mr-2"></i>Voice Selection Tips</h3>
+            <ul class="text-sm text-purple-800 space-y-1">
+                <li><strong>Orus, Fenrir, Charon</strong> - Male voices, good for authoritative hosts</li>
+                <li><strong>Aoede, Kore, Leda</strong> - Female voices, warm and engaging</li>
+                <li><strong>Puck, Zephyr</strong> - Neutral voices, versatile for any persona</li>
+            </ul>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end space-x-4">
+            <a href="/profiles/{{ profile.id }}" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                Cancel
+            </a>
+            <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-plus mr-2"></i> Add Host
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

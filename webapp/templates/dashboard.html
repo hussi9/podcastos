@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
+            <p class="text-slate-500 mt-1">Overview of your podcast production pipeline</p>
+        </div>
+        <a href="/profiles/new"
+            class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-sm font-medium text-sm">
+            <i class="fas fa-plus mr-2"></i> New Profile
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Active Profiles</p>
+                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ profiles|length }}</p>
+                </div>
+                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-microphone-alt text-indigo-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Total Episodes</p>
+                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ recent_episodes|length }}</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-layer-group text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Running Jobs</p>
+                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ running_jobs|length }}</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-sync fa-spin text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Weekly Yield</p>
+                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ recent_episodes|selectattr('date')|list|length
+                        }}</p>
+                </div>
+                <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-check text-emerald-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Profiles List -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800">Your Portfolios</h2>
+                <a href="/profiles" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
+            </div>
+
+            {% if profiles %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for profile in profiles %}
+                <div
+                    class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-300 transition group relative overflow-hidden">
+                    <!-- Accent Bar -->
+                    <div
+                        class="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition">
+                    </div>
+
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-semibold text-slate-900 group-hover:text-indigo-700 transition">{{ profile.name
+                            }}</h3>
+                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                            <i class="fas fa-podcast text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <p class="text-slate-500 text-sm mb-4 line-clamp-2 h-10">{{ profile.description }}</p>
+
+                    <div class="flex items-center gap-4 text-xs text-slate-400 mb-5">
+                        <span class="flex items-center"><i class="fas fa-clock mr-1.5 opacity-70"></i> {{
+                            profile.target_duration_minutes }}m</span>
+                        <span class="flex items-center"><i class="fas fa-users mr-1.5 opacity-70"></i> {{
+                            profile.hosts|length }}</span>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <a href="/profiles/{{ profile.id }}/generate"
+                            class="flex-1 bg-slate-900 text-white py-2 rounded-lg text-xs font-medium text-center hover:bg-slate-800 transition">
+                            Generate
+                        </a>
+                        <a href="/profiles/{{ profile.id }}"
+                            class="px-3 bg-slate-100 text-slate-600 py-2 rounded-lg text-xs font-medium hover:bg-slate-200 transition">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
+                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-microphone-slash text-slate-300 text-2xl"></i>
+                </div>
+                <h3 class="text-slate-900 font-medium mb-1">No Profiles Yet</h3>
+                <p class="text-slate-500 text-sm mb-4">Create your first podcast persona to get started.</p>
+                <a href="/profiles/new"
+                    class="inline-flex items-center text-indigo-600 font-medium text-sm hover:underline">
+                    Create Profile <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800">Recent Productions</h2>
+                <a href="/episodes" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
+            </div>
+
+            <div
+                class="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+                {% if recent_episodes %}
+                {% for episode in recent_episodes[:5] %}
+                <div class="p-4 hover:bg-slate-50 transition flex justify-between group">
+                    <div class="flex gap-3">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition">
+                            <i class="fas fa-play text-indigo-600 text-sm ml-0.5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <a href="/episodes/{{ episode.id }}"
+                                class="text-sm font-medium text-slate-900 block truncate group-hover:text-indigo-700 transition">{{
+                                episode.title }}</a>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-xs text-slate-500">{{ episode.date.strftime('%b %d') }}</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span class="text-xs text-slate-500">{{ (episode.duration_seconds or 0) // 60 }}
+                                    min</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <a href="/episodes/{{ episode.id }}" class="text-slate-300 hover:text-indigo-600 transition"><i
+                                class="fas fa-chevron-right text-xs"></i></a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="p-8 text-center text-slate-500 text-sm">
+                    No episodes generated yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

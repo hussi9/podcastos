@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}{{ episode.title }} - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2 text-sm text-slate-500 mb-2">
+                <a href="/episodes" class="hover:text-slate-800 transition"><i class="fas fa-arrow-left mr-1"></i>
+                    Episodes</a>
+                <span class="text-slate-300">/</span>
+                <span>{{ episode.episode_id }}</span>
+            </div>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ episode.title }}</h1>
+            <div class="flex items-center text-slate-500 text-sm space-x-4">
+                {% if profile %}
+                <a href="/profiles/{{ profile.id }}" class="flex items-center hover:text-indigo-600 transition">
+                    <i class="fas fa-user-circle mr-1.5"></i> {{ profile.name }}
+                </a>
+                {% endif %}
+                <span class="flex items-center">
+                    <i class="fas fa-calendar mr-1.5 "></i> {{ episode.date.strftime('%B %d, %Y') if episode.date else
+                    'Unknown date' }}
+                </span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if profile %}
+            <a href="/profiles/{{ profile.id }}/generate"
+                class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-100 transition">
+                <i class="fas fa-plus mr-2"></i> New Episode
+            </a>
+            {% endif %}
+
+            <form method="POST" action="/episodes/{{ episode.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete this episode? This cannot be undone.')">
+                <button type="submit"
+                    class="bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audio Player (Waveform) -->
+    {% if episode.audio_path %}
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <button id="playPauseBtn"
+                    class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200">
+                    <i class="fas fa-play text-xl ml-1"></i>
+                </button>
+                <div>
+                    <h3 class="font-bold text-slate-900">Episode Audio</h3>
+                    <p class="text-xs text-slate-500 font-mono tracking-wide" id="timeDisplay">00:00 / {{
+                        (episode.duration_seconds // 60) }}:{{ '%02d' % (episode.duration_seconds % 60) if
+                        episode.duration_seconds else '00:00' }}</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <a href="/player/{{ episode.id }}" target="_blank"
+                    class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-slate-700 transition shadow-md">
+                    <i class="fas fa-mobile-alt"></i> Mobile Player
+                </a>
+                <a href="/episodes/{{ episode.id }}/download"
+                    class="text-slate-400 hover:text-indigo-600 transition p-2" title="Download Audio">
+                    <i class="fas fa-download text-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Waveform Container -->
+        <div id="waveform" class="w-full"></div>
+
+        <!-- Hidden audio element for fallback/source -->
+        <audio id="audioElement" class="hidden">
+            <source src="/audio/{{ episode.audio_path.split('/')[-1] }}" type="audio/wav">
+        </audio>
+    </div>
+    {% else %}
+    <div class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center">
+        <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-volume-mute text-slate-400"></i>
+        </div>
+        <p class="text-slate-500 font-medium">Audio file not found</p>
+    </div>
+    {% endif %}
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Main Content (Left, 2 cols) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Summary -->
+            {% if episode.summary %}
+            <div class="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 class="font-bold text-slate-900 mb-3 flex items-center">
+                    <i class="fas fa-align-left text-slate-400 mr-2"></i> Episode Summary
+                </h3>
+                <p class="text-slate-600 leading-relaxed">{{ episode.summary }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Topics -->
+            {% if topics %}
+            <div class="space-y-4">
+                <h3 class="font-bold text-slate-900 flex items-center px-1">
+                    <i class="fas fa-layer-group text-slate-400 mr-2"></i> Segments & Topics
+                </h3>
+
+                {% for topic in topics %}
+                <div class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-200 transition group">
+                    <div class="flex items-start justify-between mb-2">
+                        <h4 class="font-semibold text-slate-900 group-hover:text-indigo-600 transition">{{ topic.title
+                            }}</h4>
+                        {% if topic.category %}
+                        <span
+                            class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-medium uppercase tracking-wider">{{
+                            topic.category }}</span>
+                        {% endif %}
+                    </div>
+                    {% if topic.summary %}
+                    <p class="text-sm text-slate-500 mb-3">{{ topic.summary }}</p>
+                    {% endif %}
+
+                    {% if topic.key_points %}
+                    <ul class="space-y-1">
+                        {% for point in topic.key_points %}
+                        <li class="flex items-start text-xs text-slate-500">
+                            <i
+                                class="fas fa-check text-indigo-500 mt-0.5 mr-2 opacity-0 group-hover:opacity-100 transition"></i>
+                            <span>{{ point }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Content (Right, 1 col) -->
+        <div class="space-y-6">
+            <!-- Key Facts -->
+            {% if episode.key_facts %}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                <h3 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">Key Takeaways</h3>
+                <ul class="space-y-3">
+                    {% for fact in episode.key_facts %}
+                    <li class="flex items-start gap-3">
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0"></div>
+                        <span class="text-sm text-slate-600">{{ fact }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Script Viewer -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col max-h-[600px]">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900 text-sm">Transcript</h3>
+                    <button onclick="copyScript()" class="text-xs text-indigo-600 font-medium hover:underline">
+                        Copy Text
+                    </button>
+                </div>
+                <div class="overflow-y-auto p-4 bg-white flex-1 custom-scrollbar">
+                    <pre id="scriptText"
+                        class="whitespace-pre-wrap text-xs text-slate-500 font-mono leading-relaxed">{{ episode.script or 'Script not available' }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if episode.audio_path %}
+        const playBtn = document.getElementById('playPauseBtn');
+        const icon = playBtn.querySelector('i');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const audioPath = "/audio/{{ episode.audio_path.split('/')[-1] }}";
+
+        // Initialize WaveSurfer
+        const wavesurfer = WaveSurfer.create({
+            container: '#waveform',
+            waveColor: '#e2e8f0',
+            progressColor: '#4f46e5',
+            cursorColor: '#4f46e5',
+            barWidth: 2,
+            barGap: 3,
+            barRadius: 3,
+            height: 80,
+            normalize: true,
+            backend: 'WebAudio'
+        });
+
+        wavesurfer.load(audioPath);
+
+        // Play/Pause Toggle
+        playBtn.addEventListener('click', () => {
+            wavesurfer.playPause();
+        });
+
+        // Update UI on state change
+        wavesurfer.on('play', () => {
+            icon.className = 'fas fa-pause text-xl';
+        });
+
+        wavesurfer.on('pause', () => {
+            icon.className = 'fas fa-play text-xl ml-1';
+        });
+
+        // Update Timer
+        wavesurfer.on('audioprocess', () => {
+            const time = wavesurfer.getCurrentTime();
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            const duration = wavesurfer.getDuration();
+            const dMin = Math.floor(duration / 60);
+            const dSec = Math.floor(duration % 60);
+
+            timeDisplay.innerText =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} / ` +
+                `${String(dMin).padStart(2, '0')}:${String(dSec).padStart(2, '0')}`;
+        });
+
+        // Initial duration load
+        wavesurfer.on('ready', () => {
+            const duration = wavesurfer.getDuration();
+            const dMin = Math.floor(duration / 60);
+            const dSec = Math.floor(duration % 60);
+            timeDisplay.innerText = `00:00 / ${String(dMin).padStart(2, '0')}:${String(dSec).padStart(2, '0')}`;
+        });
+        {% endif %}
+    });
+
+    function copyScript() {
+        const text = document.getElementById('scriptText').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Script copied to clipboard!');
+        });
+    }
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+{% endblock %}

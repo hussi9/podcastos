@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}New Profile - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8">
+    <!-- Header -->
+    <div>
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="/profiles" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Create Podcast Profile</h1>
+        </div>
+        <p class="text-gray-600">Configure a new podcast with its settings and workflow</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="space-y-6">
+        <!-- Basic Info -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., Desi Daily, Tech Talk Weekly"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea name="description" rows="3" placeholder="What is this podcast about?"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                    <textarea name="target_audience" rows="2" placeholder="Who is this podcast for?"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Settings -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Content Settings</h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tone</label>
+                    <select name="tone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="conversational">Conversational</option>
+                        <option value="formal">Formal</option>
+                        <option value="casual">Casual</option>
+                        <option value="educational">Educational</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                    <select name="language" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="hi-IN">Hindi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Duration</label>
+                    <select name="duration" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="5">5 minutes</option>
+                        <option value="10" selected>10 minutes</option>
+                        <option value="15">15 minutes</option>
+                        <option value="20">20 minutes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Topics per Episode</label>
+                    <select name="topic_count" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="3">3 topics</option>
+                        <option value="4">4 topics</option>
+                        <option value="5" selected>5 topics</option>
+                        <option value="6">6 topics</option>
+                        <option value="7">7 topics</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
+            <p class="text-sm text-gray-500 mb-4">Select the topics your podcast will cover</p>
+
+            <div class="grid grid-cols-3 gap-3">
+                {% set categories = ['immigration', 'career', 'family', 'community', 'finance', 'tech', 'entertainment', 'health', 'education', 'politics', 'culture', 'travel'] %}
+                {% for cat in categories %}
+                <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" name="categories" value="{{ cat }}" class="h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
+                    <span class="text-sm text-gray-700 capitalize">{{ cat }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="categories" id="categories-json" value="[]">
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end space-x-4">
+            <a href="/profiles" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                Cancel
+            </a>
+            <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                Create Profile
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Collect categories into JSON
+document.querySelector('form').addEventListener('submit', function(e) {
+    const checkboxes = document.querySelectorAll('input[name="categories"]:checked');
+    const categories = Array.from(checkboxes).map(cb => cb.value);
+    document.getElementById('categories-json').value = JSON.stringify(categories);
+});
+</script>
+{% endblock %}

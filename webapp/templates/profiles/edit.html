@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ profile.name }} - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8">
+    <!-- Header -->
+    <div>
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="/profiles/{{ profile.id }}" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Edit Profile</h1>
+        </div>
+        <p class="text-gray-600">Update settings for {{ profile.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="space-y-6">
+        <!-- Basic Info -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Name *</label>
+                    <input type="text" name="name" required value="{{ profile.name }}"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea name="description" rows="3"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">{{ profile.description or '' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                    <textarea name="target_audience" rows="2"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">{{ profile.target_audience or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Settings -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Content Settings</h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tone</label>
+                    <select name="tone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="conversational" {{ 'selected' if profile.tone == 'conversational' }}>Conversational</option>
+                        <option value="formal" {{ 'selected' if profile.tone == 'formal' }}>Formal</option>
+                        <option value="casual" {{ 'selected' if profile.tone == 'casual' }}>Casual</option>
+                        <option value="educational" {{ 'selected' if profile.tone == 'educational' }}>Educational</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                    <select name="language" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="en-US" {{ 'selected' if profile.language == 'en-US' }}>English (US)</option>
+                        <option value="en-GB" {{ 'selected' if profile.language == 'en-GB' }}>English (UK)</option>
+                        <option value="hi-IN" {{ 'selected' if profile.language == 'hi-IN' }}>Hindi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Duration</label>
+                    <select name="duration" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="5" {{ 'selected' if profile.target_duration_minutes == 5 }}>5 minutes</option>
+                        <option value="10" {{ 'selected' if profile.target_duration_minutes == 10 }}>10 minutes</option>
+                        <option value="15" {{ 'selected' if profile.target_duration_minutes == 15 }}>15 minutes</option>
+                        <option value="20" {{ 'selected' if profile.target_duration_minutes == 20 }}>20 minutes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Topics per Episode</label>
+                    <select name="topic_count" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="3" {{ 'selected' if profile.topic_count == 3 }}>3 topics</option>
+                        <option value="4" {{ 'selected' if profile.topic_count == 4 }}>4 topics</option>
+                        <option value="5" {{ 'selected' if profile.topic_count == 5 }}>5 topics</option>
+                        <option value="6" {{ 'selected' if profile.topic_count == 6 }}>6 topics</option>
+                        <option value="7" {{ 'selected' if profile.topic_count == 7 }}>7 topics</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
+            <p class="text-sm text-gray-500 mb-4">Select the topics your podcast will cover</p>
+
+            <div class="grid grid-cols-3 gap-3">
+                {% set all_categories = ['immigration', 'career', 'family', 'community', 'finance', 'tech', 'entertainment', 'health', 'education', 'politics', 'culture', 'travel'] %}
+                {% for cat in all_categories %}
+                <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" name="categories" value="{{ cat }}"
+                        {{ 'checked' if cat in (profile.categories or []) }}
+                        class="h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
+                    <span class="text-sm text-gray-700 capitalize">{{ cat }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Scheduling -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Automatic Generation</h2>
+                    <p class="text-sm text-gray-500">Schedule automatic podcast generation</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="schedule_enabled" value="1"
+                        {{ 'checked' if profile.schedule_enabled }}
+                        class="sr-only peer" id="scheduleToggle">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+            </div>
+
+            <div id="scheduleOptions" class="{{ 'opacity-50 pointer-events-none' if not profile.schedule_enabled }}">
+                <div class="grid grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-clock mr-1"></i> Generation Time
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <select name="schedule_hour" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                                {% for h in range(24) %}
+                                <option value="{{ h }}" {{ 'selected' if profile.schedule_hour == h }}>
+                                    {{ '%02d' % h }}:00 {{ '(AM)' if h < 12 else '(PM)' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <span class="text-gray-500">:</span>
+                            <select name="schedule_minute" class="w-24 border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                                <option value="0" {{ 'selected' if (profile.schedule_minute or 0) == 0 }}>00</option>
+                                <option value="15" {{ 'selected' if profile.schedule_minute == 15 }}>15</option>
+                                <option value="30" {{ 'selected' if profile.schedule_minute == 30 }}>30</option>
+                                <option value="45" {{ 'selected' if profile.schedule_minute == 45 }}>45</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-globe mr-1"></i> Timezone
+                        </label>
+                        <select name="timezone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="America/New_York" {{ 'selected' if profile.timezone == 'America/New_York' }}>Eastern Time (ET)</option>
+                            <option value="America/Chicago" {{ 'selected' if profile.timezone == 'America/Chicago' }}>Central Time (CT)</option>
+                            <option value="America/Denver" {{ 'selected' if profile.timezone == 'America/Denver' }}>Mountain Time (MT)</option>
+                            <option value="America/Los_Angeles" {{ 'selected' if profile.timezone == 'America/Los_Angeles' }}>Pacific Time (PT)</option>
+                            <option value="Asia/Kolkata" {{ 'selected' if profile.timezone == 'Asia/Kolkata' }}>India (IST)</option>
+                            <option value="UTC" {{ 'selected' if profile.timezone == 'UTC' }}>UTC</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-alt mr-1"></i> Days to Generate
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        {% set days = [('mon', 'Mon'), ('tue', 'Tue'), ('wed', 'Wed'), ('thu', 'Thu'), ('fri', 'Fri'), ('sat', 'Sat'), ('sun', 'Sun')] %}
+                        {% set profile_days = profile.schedule_days or ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] %}
+                        {% for day_val, day_label in days %}
+                        <label class="cursor-pointer">
+                            <input type="checkbox" name="schedule_days" value="{{ day_val }}"
+                                {{ 'checked' if day_val in profile_days }}
+                                class="sr-only peer">
+                            <span class="px-4 py-2 border border-gray-300 rounded-lg text-sm
+                                peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600
+                                hover:bg-gray-50 transition">{{ day_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if profile.last_scheduled_run %}
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-history mr-1"></i>
+                        Last scheduled run: {{ profile.last_scheduled_run.strftime('%B %d, %Y at %I:%M %p') }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-between">
+            <form method="POST" action="/profiles/{{ profile.id }}/delete" class="inline" onsubmit="return confirm('Are you sure you want to delete this profile? This will also delete all episodes.')">
+                <button type="submit" class="px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                    <i class="fas fa-trash mr-2"></i> Delete Profile
+                </button>
+            </form>
+            <div class="space-x-4">
+                <a href="/profiles/{{ profile.id }}" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Toggle schedule options visibility
+document.getElementById('scheduleToggle').addEventListener('change', function() {
+    const options = document.getElementById('scheduleOptions');
+    if (this.checked) {
+        options.classList.remove('opacity-50', 'pointer-events-none');
+    } else {
+        options.classList.add('opacity-50', 'pointer-events-none');
+    }
+});
+</script>
+{% endblock %}

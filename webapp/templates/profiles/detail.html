@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.name }} - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center space-x-3">
+                <a href="/profiles" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">{{ profile.name }}</h1>
+                <span class="px-3 py-1 text-sm rounded-full {% if profile.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                    {{ 'Active' if profile.is_active else 'Inactive' }}
+                </span>
+            </div>
+            <p class="text-gray-600 mt-2">{{ profile.description }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/profiles/{{ profile.id }}/edit" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                <i class="fas fa-edit mr-2"></i> Edit
+            </a>
+            <a href="/profiles/{{ profile.id }}/generate" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-play mr-2"></i> Generate Episode
+            </a>
+        </div>
+    </div>
+
+    <!-- Profile Settings Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Settings -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Hosts -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-users mr-2 text-purple-600"></i> Hosts
+                    </h2>
+                    <a href="/profiles/{{ profile.id }}/hosts/new" class="text-purple-600 hover:text-purple-800 text-sm">
+                        <i class="fas fa-plus mr-1"></i> Add Host
+                    </a>
+                </div>
+
+                {% if profile.hosts %}
+                <div class="space-y-4">
+                    {% for host in profile.hosts %}
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-900">{{ host.name }}</h3>
+                                <p class="text-sm text-gray-500 mt-1">{{ host.persona[:100] }}{% if host.persona|length > 100 %}...{% endif %}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
+                                Voice: {{ host.voice_name }}
+                            </span>
+                        </div>
+                        {% if host.expertise_areas %}
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            {% for area in host.expertise_areas %}
+                            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">{{ area }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No hosts configured</p>
+                {% endif %}
+            </div>
+
+            <!-- Content Sources -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-rss mr-2 text-purple-600"></i> Content Sources
+                    </h2>
+                    <a href="/profiles/{{ profile.id }}/sources" class="text-purple-600 hover:text-purple-800 text-sm">
+                        Manage <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                {% if profile.sources %}
+                <div class="grid grid-cols-2 gap-3">
+                    {% for source in profile.sources[:6] %}
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center
+                            {% if source.source_type == 'reddit' %}bg-orange-100 text-orange-600
+                            {% elif source.source_type == 'rss' %}bg-blue-100 text-blue-600
+                            {% elif source.source_type == 'google_news' %}bg-green-100 text-green-600
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            <i class="fas {% if source.source_type == 'reddit' %}fa-reddit{% elif source.source_type == 'rss' %}fa-rss{% else %}fa-newspaper{% endif %}"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ source.name }}</p>
+                            <p class="text-xs text-gray-500">Priority: {{ source.priority }}/10</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if profile.sources|length > 6 %}
+                <p class="text-sm text-gray-500 mt-3 text-center">+{{ profile.sources|length - 6 }} more sources</p>
+                {% endif %}
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No sources configured</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Episodes -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-history mr-2 text-purple-600"></i> Recent Episodes
+                    </h2>
+                </div>
+
+                {% if episodes %}
+                <div class="space-y-3">
+                    {% for episode in episodes[:5] %}
+                    <a href="/episodes/{{ episode.id }}" class="block p-4 border border-gray-200 rounded-lg hover:border-purple-300 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-gray-900">{{ episode.title }}</h3>
+                                <p class="text-sm text-gray-500">{{ episode.date.strftime('%B %d, %Y') }}</p>
+                            </div>
+                            <span class="text-sm text-gray-500">{{ (episode.duration_seconds or 0) // 60 }} min</span>
+                        </div>
+                        {% if episode.topics_covered %}
+                        <div class="mt-2 flex flex-wrap gap-1">
+                            {% for topic in episode.topics_covered[:3] %}
+                            <span class="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">{{ topic }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No episodes yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Settings Summary -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Duration</p>
+                        <p class="font-medium">{{ profile.target_duration_minutes }} minutes</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Topics per Episode</p>
+                        <p class="font-medium">{{ profile.topic_count }} topics</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Tone</p>
+                        <p class="font-medium capitalize">{{ profile.tone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Language</p>
+                        <p class="font-medium">{{ profile.language }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">TTS Model</p>
+                        <p class="font-medium text-sm">{{ profile.tts_model }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Audience -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Target Audience</h2>
+                <p class="text-gray-600 text-sm">{{ profile.target_audience or 'Not specified' }}</p>
+            </div>
+
+            <!-- Topics to Avoid -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Topics to Avoid</h2>
+                    <a href="/profiles/{{ profile.id }}/topics" class="text-purple-600 hover:text-purple-800 text-sm">
+                        Manage
+                    </a>
+                </div>
+
+                {% if avoided_topics %}
+                <div class="space-y-2">
+                    {% for topic in avoided_topics[:5] %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span class="text-sm text-gray-700">{{ topic.keyword }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded
+                            {% if topic.avoidance_type == 'permanent' %}bg-red-100 text-red-600
+                            {% else %}bg-amber-100 text-amber-600{% endif %}">
+                            {{ topic.avoidance_type }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">No topics in avoidance list</p>
+                {% endif %}
+            </div>
+
+            <!-- Categories -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
+                <div class="flex flex-wrap gap-2">
+                    {% for cat in profile.categories or [] %}
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">{{ cat }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

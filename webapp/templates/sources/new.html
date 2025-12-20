@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Add Source - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8">
+    <!-- Header -->
+    <div>
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="/profiles/{{ profile.id }}/sources" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Add Content Source</h1>
+        </div>
+        <p class="text-gray-600">Add a new content source to {{ profile.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="space-y-6" id="sourceForm">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Source Details</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Source Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., r/immigration, Tech News"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Source Type *</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="source_type" value="reddit" class="hidden peer" checked>
+                            <div class="p-4 border-2 rounded-lg text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:bg-gray-50 transition">
+                                <i class="fab fa-reddit-alien text-2xl text-orange-500 mb-2"></i>
+                                <div class="font-medium">Reddit</div>
+                                <div class="text-xs text-gray-500">Subreddits</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="source_type" value="rss" class="hidden peer">
+                            <div class="p-4 border-2 rounded-lg text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
+                                <i class="fas fa-rss text-2xl text-blue-500 mb-2"></i>
+                                <div class="font-medium">RSS Feed</div>
+                                <div class="text-xs text-gray-500">News feeds</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="source_type" value="google_news" class="hidden peer">
+                            <div class="p-4 border-2 rounded-lg text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
+                                <i class="fab fa-google text-2xl text-green-500 mb-2"></i>
+                                <div class="font-medium">Google News</div>
+                                <div class="text-xs text-gray-500">Search queries</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Reddit Options -->
+                <div id="redditOptions" class="source-options">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subreddit Name *</label>
+                    <div class="flex items-center">
+                        <span class="px-4 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-500">r/</span>
+                        <input type="text" name="subreddit" placeholder="immigration"
+                            class="flex-1 border border-gray-300 rounded-r-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Enter just the subreddit name without r/</p>
+                </div>
+
+                <!-- RSS Options -->
+                <div id="rssOptions" class="source-options hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">RSS Feed URL *</label>
+                    <input type="url" name="rss_url" placeholder="https://example.com/feed.xml"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p class="text-xs text-gray-500 mt-1">Full URL to the RSS or Atom feed</p>
+                </div>
+
+                <!-- Google News Options -->
+                <div id="googleOptions" class="source-options hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Query *</label>
+                    <input type="text" name="search_query" placeholder="H1B visa news"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p class="text-xs text-gray-500 mt-1">Google News search query</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        <select name="priority" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="10">10 - Highest</option>
+                            <option value="9">9</option>
+                            <option value="8">8</option>
+                            <option value="7">7</option>
+                            <option value="6">6</option>
+                            <option value="5" selected>5 - Medium</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1 - Lowest</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Higher priority sources are used first</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+                        <input type="text" name="categories" placeholder="immigration, career (comma-separated)"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Content categories this source covers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end space-x-4">
+            <a href="/profiles/{{ profile.id }}/sources" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                Cancel
+            </a>
+            <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-plus mr-2"></i> Add Source
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Toggle source options based on type selection
+document.querySelectorAll('input[name="source_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.source-options').forEach(el => el.classList.add('hidden'));
+
+        if (this.value === 'reddit') {
+            document.getElementById('redditOptions').classList.remove('hidden');
+        } else if (this.value === 'rss') {
+            document.getElementById('rssOptions').classList.remove('hidden');
+        } else if (this.value === 'google_news') {
+            document.getElementById('googleOptions').classList.remove('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

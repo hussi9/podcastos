@@ -1,0 +1,155 @@
+<div id="job-status-container" class="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500" {% if job.status in
+    ['running', 'pending' ] %} hx-get="/partials/jobs/{{ job.job_id }}/status" hx-trigger="every 2s" hx-swap="outerHTML"
+    {% endif %}>
+
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center gap-3">
+                <a href="/profiles/{{ profile.id }}" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Generation Status</h1>
+            </div>
+            <p class="text-slate-500 mt-1 ml-7">Job {{ job.job_id }} &bull; {{ profile.name }}</p>
+        </div>
+
+        {% if job.status == 'completed' %}
+        <span
+            class="px-4 py-2 rounded-lg text-sm font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm flex items-center">
+            <i class="fas fa-check-circle mr-2"></i> Completed
+        </span>
+        {% elif job.status == 'failed' %}
+        <span
+            class="px-4 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 border border-red-200 shadow-sm flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i> Failed
+        </span>
+        {% else %}
+        <span
+            class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm flex items-center">
+            <i class="fas fa-sync fa-spin mr-2"></i> {{ job.status|title }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <div class="flex justify-between items-end mb-4">
+            <div>
+                <span class="text-4xl font-bold text-slate-800">{{ job.progress_percent }}%</span>
+                <span class="text-slate-500 ml-2 font-medium">complete</span>
+            </div>
+            <span
+                class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wide text-xs">
+                Stage: {{ job.current_stage|replace('_', ' ') }}
+            </span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden shadow-inner">
+            <div class="bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out relative"
+                style="width: {{ job.progress_percent }}%">
+                <div class="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pipeline Stages -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+        <div class="p-6 bg-slate-50 border-b border-slate-100">
+            <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Production Pipeline</h2>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% set all_stages = [
+            ('content_gathering', 'Content Gathering', 'fa-download', 'Ingesting source materials'),
+            ('research', 'Deep Research', 'fa-search', 'Analyzing and fact-checking'),
+            ('scripting', 'Script Generation', 'fa-file-alt', 'synthesizing dialogue'),
+            ('review', 'Editorial Review', 'fa-check-double', 'Refining flow and tone'),
+            ('audio', 'Audio Synthesis', 'fa-volume-up', 'Generating voice actors')
+            ] %}
+
+            {% for stage_id, stage_name, icon, description in all_stages %}
+            {% set is_completed = stage_id in (job.stages_completed or []) %}
+            {% set is_current = job.current_stage == stage_id %}
+            {% set is_pending = stage_id in (job.stages_pending or []) %}
+
+            <div
+                class="flex items-center p-6 bg-white transition-colors duration-300 {% if is_current %}bg-indigo-50/50{% endif %}">
+                <!-- Icon Status -->
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-500 mr-5
+                        {% if is_completed %}
+                            bg-emerald-100 text-emerald-600
+                        {% elif is_current %}
+                            bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110
+                        {% else %}
+                            bg-slate-100 text-slate-300
+                        {% endif %}">
+
+                    {% if is_completed %}
+                    <i class="fas fa-check text-lg"></i>
+                    {% elif is_current %}
+                    <i class="fas fa-circle-notch fa-spin text-lg"></i>
+                    {% else %}
+                    <i class="fas {{ icon }} text-lg"></i>
+                    {% endif %}
+                </div>
+
+                <!-- Text Info -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <h3
+                            class="text-base font-semibold {% if is_current or is_completed %}text-slate-800{% else %}text-slate-400{% endif %}">
+                            {{ stage_name }}
+                        </h3>
+
+                        <!-- Right Side Status Badge -->
+                        {% if is_current %}
+                        <div class="flex items-center text-indigo-600 text-xs font-bold animate-pulse">
+                            PROCESSING <i class="fas fa-chevron-right ml-1"></i>
+                        </div>
+                        {% elif is_completed %}
+                        <span class="text-emerald-500 text-xs font-medium"><i class="fas fa-check mr-1"></i> DONE</span>
+                        {% endif %}
+                    </div>
+
+                    <p
+                        class="text-sm {% if is_current %}text-indigo-600/80 font-medium{% else %}text-slate-400{% endif %}">
+                        {% if is_current and job.stage_details.get(stage_id) %}
+                        {{ job.stage_details[stage_id] }}...
+                        {% else %}
+                        {{ description }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    {% if job.error_message %}
+    <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4">
+        <div class="bg-red-100 p-2 rounded-full">
+            <i class="fas fa-exclamation-triangle text-red-500"></i>
+        </div>
+        <div>
+            <h3 class="font-bold text-red-900">Process Failed</h3>
+            <p class="text-sm text-red-700 mt-1">{{ job.error_message }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions Footer -->
+    <div class="flex justify-end pt-4">
+        {% if job.status == 'completed' and job.episode_id %}
+        <a href="/episodes/{{ job.episode_id }}"
+            class="bg-indigo-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center">
+            View Final Episode <i class="fas fa-arrow-right ml-3"></i>
+        </a>
+        {% elif job.status == 'failed' %}
+        <a href="/profiles/{{ profile.id }}/generate"
+            class="bg-white border-2 border-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:border-slate-300 hover:bg-slate-50 transition">
+            <i class="fas fa-redo mr-2"></i> Try Again
+        </a>
+        {% endif %}
+    </div>
+</div>

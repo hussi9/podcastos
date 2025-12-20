@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desi Daily Player</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F172A;
+            color: white;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #8B5CF6 0%, #EC4899 100%);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden">
+
+    <div id="root" class="h-full w-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const LucideIcons = window.lucide;
+
+        // Simple icon components since Lucide React wrapper isn't available via CDN conveniently
+        const Icon = ({ name, size = 24, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} width={size} height={size} className={className}></i>;
+        };
+
+        const App = () => {
+            const episodeId = {{ episode_id }
+        };
+        const [data, setData] = useState(null);
+        const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
+        const [isPlaying, setIsPlaying] = useState(false);
+        const [loading, setLoading] = useState(true);
+        const audioRef = useRef(new Audio());
+
+        // Fetch Data
+        useEffect(() => {
+            fetch(`/api/episodes/${episodeId}`)
+                .then(res => res.json())
+                .then(json => {
+                    setData(json);
+                    setLoading(false);
+                    // Preload first segment
+                    if (json.segments && json.segments.length > 0) {
+                        audioRef.current.src = json.segments[0].audio_url;
+                    }
+                })
+                .catch(e => console.error(e));
+        }, [episodeId]);
+
+        // Handle Audio Events
+        useEffect(() => {
+            const audio = audioRef.current;
+
+            const handleEnded = () => {
+                playNext();
+            };
+
+            audio.addEventListener('ended', handleEnded);
+            return () => audio.removeEventListener('ended', handleEnded);
+        }, [data, currentSegmentIdx]);
+
+        const playSegment = (idx) => {
+            if (!data || !data.segments[idx]) return;
+
+            setCurrentSegmentIdx(idx);
+            // Important: Update src directly
+            audioRef.current.src = data.segments[idx].audio_url;
+            audioRef.current.play()
+                .then(() => setIsPlaying(true))
+                .catch(e => console.error("Play failed", e));
+        };
+
+        const togglePlay = () => {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        };
+
+        const playNext = () => {
+            if (data && currentSegmentIdx < data.segments.length - 1) {
+                playSegment(currentSegmentIdx + 1);
+            } else {
+                setIsPlaying(false);
+            }
+        };
+
+        const playPrev = () => {
+            if (currentSegmentIdx > 0) {
+                playSegment(currentSegmentIdx - 1);
+            }
+        };
+
+        if (loading) return (
+            <div className="flex h-screen items-center justify-center text-slate-400">
+                Loading your customized commute...
+            </div>
+        );
+
+        if (!data || !data.segments || data.segments.length === 0) return (
+            <div className="flex h-screen items-center justify-center text-slate-400 text-center p-6">
+                <div>
+                    <h2 className="text-xl text-white mb-2">No audio segments found</h2>
+                    <p>This episode was generated with the old engine. Only full MP3 download is available.</p>
+                    <a href={`/episodes/${episodeId}`} className="block mt-4 text-purple-400">Go back</a>
+                </div>
+            </div>
+        );
+
+        const currentSegment = data.segments[currentSegmentIdx];
+
+        return (
+            <div className="h-full flex flex-col bg-slate-900 text-white relative">
+                {/* Background Ambient Gradient */}
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-purple-900/40 to-slate-900 pointer-events-none"></div>
+
+                {/* Header */}
+                <header className="p-4 z-10 flex justify-between items-center text-slate-400">
+                    <a href="/" className="hover:text-white"><Icon name="chevron-down" /></a>
+                    <span className="text-xs font-bold tracking-widest uppercase">Playing from Desi Daily</span>
+                    <Icon name="more-horizontal" />
+                </header>
+
+                {/* Main Content Area */}
+                <main className="flex-1 flex flex-col items-center justify-center p-6 z-10">
+                    {/* Album Art (Dynamic based on topic category if we had it, static for now) */}
+                    <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl shadow-2xl mb-8 flex items-center justify-center relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-black/10"></div>
+                        {/* Visualize "Segments" as little bars */}
+                        <div className="absolute bottom-4 left-4 right-4 flex gap-1 h-1">
+                            {data.segments.map((seg, idx) => (
+                                <div key={idx}
+                                    className={`flex-1 rounded-full transition-colors duration-300 ${idx === currentSegmentIdx ? 'bg-white' : idx < currentSegmentIdx ? 'bg-white/50' : 'bg-white/20'}`}
+                                ></div>
+                            ))}
+                        </div>
+                        <span className="text-6xl animate-pulse">🎙️</span>
+                    </div>
+
+                    {/* Text Info */}
+                    <div className="text-center w-full max-w-md">
+                        <h2 className="text-2xl font-bold mb-1 truncate">{currentSegment.title}</h2>
+                        <p className="text-purple-400 font-medium text-sm mb-6">{data.title}</p>
+
+                        {/* Topic Progress Bar (Fake for prototype) */}
+                        <div className="w-full bg-slate-700 h-1.5 rounded-full mb-2 overflow-hidden">
+                            <div className="h-full bg-white w-1/3 progress-bar animate-[pulse_3s_infinite]"></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-500 font-mono mb-8">
+                            <span>0:00</span>
+                            <span>-{Math.floor(currentSegment.duration)}s</span>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex items-center justify-between w-full max-w-xs mb-8">
+                        <button className="text-slate-400 hover:text-white transition" title="Ask AI (Coming Soon)">
+                            <Icon name="mic" size={20} />
+                        </button>
+
+                        <button onClick={playPrev} className="text-white hover:text-purple-400 transition disabled:opacity-30" disabled={currentSegmentIdx === 0}>
+                            <Icon name="skip-back" size={32} fill="currentColor" />
+                        </button>
+
+                        <button onClick={togglePlay} className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition shadow-lg shadow-purple-500/20">
+                            {isPlaying ? (
+                                <Icon name="pause" size={32} fill="currentColor" />
+                            ) : (
+                                <Icon name="play" size={32} fill="currentColor" className="ml-1" />
+                            )}
+                        </button>
+
+                        <button onClick={playNext} className="text-white hover:text-purple-400 transition disabled:opacity-30" disabled={currentSegmentIdx === data.segments.length - 1}>
+                            <Icon name="skip-forward" size={32} fill="currentColor" />
+                        </button>
+
+                        <button className="text-slate-400 hover:text-white transition">
+                            <Icon name="list-music" size={20} />
+                        </button>
+                    </div>
+                </main>
+
+                {/* Playlist Drawer (Always visible for prototype) */}
+                <div className="glass-panel p-4 rounded-t-3xl h-1/3 overflow-y-auto">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Up Next</h3>
+                    <div className="space-y-1">
+                        {data.segments.map((seg, idx) => (
+                            <div
+                                key={idx}
+                                onClick={() => playSegment(idx)}
+                                className={`flex items-center p-3 rounded-xl cursor-pointer transition ${idx === currentSegmentIdx ? 'bg-white/10 border border-purple-500/50' : 'hover:bg-white/5'}`}
+                            >
+                                <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-xs mr-4 font-mono text-slate-300">
+                                    {idx + 1}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className={`text-sm font-medium truncate ${idx === currentSegmentIdx ? 'text-purple-300' : 'text-slate-200'}`}>
+                                        {seg.title}
+                                    </h4>
+                                    <p className="text-xs text-slate-500 truncate">
+                                        {seg.sequence === 0 ? "Intro" : seg.topic_id} • {Math.round(seg.duration)}s
+                                    </p>
+                                </div>
+                                {idx === currentSegmentIdx && (
+                                    <div className="w-4 h-4 text-purple-400 animate-bounce">
+                                        <Icon name="bar-chart-2" size={16} />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

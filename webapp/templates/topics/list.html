@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Topic Management - {{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center space-x-3 mb-2">
+                <a href="/profiles/{{ profile.id }}" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Topic Management</h1>
+            </div>
+            <p class="text-gray-600">Manage topic history and avoidance for {{ profile.name }}</p>
+        </div>
+    </div>
+
+    <!-- Avoided Topics Section -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-ban text-red-500 mr-2"></i>Topics to Avoid
+            </h2>
+        </div>
+
+        <!-- Add Avoidance Form -->
+        <form method="POST" action="/profiles/{{ profile.id }}/topics/avoid" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Keyword *</label>
+                    <input type="text" name="keyword" required placeholder="e.g., Trump, elections"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select name="avoidance_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 focus:border-purple-500">
+                        <option value="temporary">Temporary (will reset)</option>
+                        <option value="permanent">Permanent</option>
+                        <option value="reduce">Reduce frequency</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                    <input type="text" name="reason" placeholder="Why avoid this topic?"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                        <i class="fas fa-plus mr-1"></i> Add to Avoid List
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Avoided Topics List -->
+        {% if avoided_topics %}
+        <div class="space-y-2">
+            {% for topic in avoided_topics %}
+            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <span class="px-2 py-1 text-xs rounded-full
+                        {% if topic.avoidance_type == 'permanent' %}bg-red-200 text-red-800
+                        {% elif topic.avoidance_type == 'reduce' %}bg-amber-200 text-amber-800
+                        {% else %}bg-gray-200 text-gray-800{% endif %}">
+                        {{ topic.avoidance_type }}
+                    </span>
+                    <span class="font-medium text-gray-900">{{ topic.keyword }}</span>
+                    {% if topic.reason %}
+                    <span class="text-sm text-gray-500">- {{ topic.reason }}</span>
+                    {% endif %}
+                </div>
+                <form method="POST" action="/profiles/{{ profile.id }}/topics/avoid/{{ topic.id }}/delete" class="inline">
+                    <button type="submit" class="text-red-500 hover:text-red-700" title="Remove from list">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-4">No topics in avoidance list</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Topics Section -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">
+            <i class="fas fa-history text-purple-500 mr-2"></i>Recent Topics Covered
+        </h2>
+
+        {% if recent_topics %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-sm font-medium text-gray-700">Topic</th>
+                        <th class="text-left px-4 py-3 text-sm font-medium text-gray-700">Category</th>
+                        <th class="text-left px-4 py-3 text-sm font-medium text-gray-700">Date</th>
+                        <th class="text-left px-4 py-3 text-sm font-medium text-gray-700">Ongoing</th>
+                        <th class="text-right px-4 py-3 text-sm font-medium text-gray-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for topic in recent_topics %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <div class="font-medium text-gray-900">{{ topic.title }}</div>
+                            {% if topic.summary %}
+                            <div class="text-sm text-gray-500 truncate max-w-md">{{ topic.summary }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                                {{ topic.category or 'general' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-500">
+                            {{ topic.created_at.strftime('%b %d, %Y') if topic.created_at else 'Unknown' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if topic.is_ongoing %}
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                <i class="fas fa-sync-alt mr-1"></i> Ongoing
+                            </span>
+                            {% else %}
+                            <span class="text-gray-400 text-sm">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <form method="POST" action="/profiles/{{ profile.id }}/topics/avoid" class="inline">
+                                <input type="hidden" name="keyword" value="{{ topic.title }}">
+                                <input type="hidden" name="avoidance_type" value="temporary">
+                                <input type="hidden" name="reason" value="Already covered recently">
+                                <button type="submit" class="text-sm text-red-500 hover:text-red-700" title="Add to avoid list">
+                                    <i class="fas fa-ban"></i> Avoid
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No topics have been covered yet. Generate your first episode!</p>
+        {% endif %}
+    </div>
+
+    <!-- Info Box -->
+    <div class="bg-blue-50 rounded-xl p-6">
+        <h3 class="font-medium text-blue-900 mb-2"><i class="fas fa-info-circle mr-2"></i>How Topic Management Works</h3>
+        <ul class="text-sm text-blue-800 space-y-2">
+            <li><strong>Avoid List:</strong> Topics you explicitly don't want covered (permanently or temporarily)</li>
+            <li><strong>Recent Topics:</strong> Topics covered in the last 50 episodes - the AI will naturally avoid repeating these</li>
+            <li><strong>Ongoing Stories:</strong> Topics marked as "ongoing" will be followed up in future episodes</li>
+            <li><strong>Reduce Frequency:</strong> Topics that should be covered less often (e.g., once per week max)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

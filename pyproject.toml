@@ -1,0 +1,47 @@
+[project]
+name = "desi-podcast-engine"
+version = "1.0.0"
+description = "AI-powered daily podcast generator for the South Asian diaspora in the USA"
+authors = [
+    {name = "DesiVibe", email = "hello@desivibe.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.25.0",
+    "google-generativeai>=0.3.0",
+    "elevenlabs>=1.0.0",
+    "praw>=7.7.0",
+    "feedparser>=6.0.0",
+    "python-dotenv>=1.0.0",
+    "apscheduler>=3.10.0",
+    "jinja2>=3.1.0",
+    "pydub>=0.25.0",
+    "aiofiles>=23.2.0",
+    "supabase>=2.0.0",
+    "boto3>=1.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
