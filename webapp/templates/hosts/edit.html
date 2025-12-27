@@ -16,7 +16,7 @@
     </div>
 
     <!-- Form -->
-    <form method="POST" class="space-y-6">
+    <form method="POST" class="space-y-6" id="hostEditForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="bg-white rounded-xl shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Host Details</h2>
@@ -78,4 +78,15 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Form submission with loading state
+    document.getElementById('hostEditForm').addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]:not([formaction])');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+        }
+    });
+</script>
 {% endblock %}

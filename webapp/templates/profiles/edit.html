@@ -16,7 +16,7 @@
     </div>
 
     <!-- Form -->
-    <form method="POST" class="space-y-6">
+    <form method="POST" class="space-y-6" id="profileEditForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- Basic Info -->
         <div class="bg-white rounded-xl shadow-sm p-6">
@@ -215,6 +215,15 @@ document.getElementById('scheduleToggle').addEventListener('change', function() 
         options.classList.remove('opacity-50', 'pointer-events-none');
     } else {
         options.classList.add('opacity-50', 'pointer-events-none');
+    }
+});
+
+// Form submission with loading state
+document.getElementById('profileEditForm').addEventListener('submit', function(e) {
+    const btn = this.querySelector('button[type="submit"]:not([formaction])');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
     }
 });
 </script>

@@ -184,5 +184,12 @@
             }
         });
     });
+
+    // Form submission with loading state
+    document.getElementById('sourceForm').addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding Source...';
+    });
 </script>
 {% endblock %}

@@ -477,6 +477,68 @@
             border-color: var(--success);
         }
 
+        /* Native HTML5 validation styling */
+        .form-input:user-invalid,
+        .form-textarea:user-invalid,
+        .form-select:user-invalid {
+            border-color: var(--error);
+        }
+
+        .form-input:user-invalid:focus,
+        .form-textarea:user-invalid:focus,
+        .form-select:user-invalid:focus {
+            box-shadow: 0 0 0 3px var(--error-light);
+        }
+
+        /* Show validation feedback after interaction */
+        .form-input:user-valid:not(:placeholder-shown),
+        .form-textarea:user-valid:not(:placeholder-shown) {
+            border-color: var(--success);
+        }
+
+        /* Required field indicator in placeholder */
+        .form-input[required]::placeholder,
+        .form-textarea[required]::placeholder {
+            opacity: 0.6;
+        }
+
+        /* Validation for Tailwind-styled inputs */
+        input[type="text"]:user-invalid,
+        input[type="email"]:user-invalid,
+        input[type="url"]:user-invalid,
+        textarea:user-invalid,
+        select:user-invalid {
+            border-color: var(--error) !important;
+        }
+
+        input[type="text"]:user-invalid:focus,
+        input[type="email"]:user-invalid:focus,
+        input[type="url"]:user-invalid:focus,
+        textarea:user-invalid:focus,
+        select:user-invalid:focus {
+            --tw-ring-color: var(--error-light) !important;
+            box-shadow: 0 0 0 3px var(--error-light) !important;
+        }
+
+        /* Valid state for fields with content */
+        input[type="text"]:user-valid:not(:placeholder-shown),
+        input[type="email"]:user-valid:not(:placeholder-shown),
+        input[type="url"]:user-valid:not(:placeholder-shown),
+        textarea:user-valid:not(:placeholder-shown) {
+            border-color: var(--success) !important;
+        }
+
+        /* Shake animation for invalid fields */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
         .form-textarea {
             min-height: 120px;
             resize: vertical;
@@ -994,6 +1056,23 @@
 </head>
 
 <body>
+    <!-- Skip to Content Link for Accessibility -->
+    <a href="#main-content" class="skip-link" style="
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--accent);
+        color: white;
+        padding: var(--space-sm) var(--space-md);
+        z-index: 1000;
+        text-decoration: none;
+        font-weight: 500;
+        border-radius: 0 0 var(--radius-md) 0;
+        transition: top 0.2s ease;
+    " onfocus="this.style.top='0'" onblur="this.style.top='-40px'">
+        Skip to main content
+    </a>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container" role="alert" aria-live="polite"></div>
 
@@ -1057,7 +1136,7 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" role="main">
+        <main class="main-content" role="main" id="main-content" tabindex="-1">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 <div class="flash-messages">
@@ -1668,6 +1747,48 @@
 
         // Expose keyboard help globally
         window.showKeyboardHelp = showKeyboardHelp;
+
+        // ============================================================
+        // FORM VALIDATION FEEDBACK
+        // ============================================================
+
+        // Enhanced validation with toast notifications
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('invalid', function(e) {
+                e.preventDefault();
+                const field = e.target;
+                const fieldName = field.labels?.[0]?.textContent?.replace('*', '').trim() ||
+                                  field.name || field.placeholder || 'Field';
+
+                // Build validation message
+                let message = '';
+                if (field.validity.valueMissing) {
+                    message = `${fieldName} is required`;
+                } else if (field.validity.typeMismatch) {
+                    message = `Please enter a valid ${field.type}`;
+                } else if (field.validity.tooShort) {
+                    message = `${fieldName} must be at least ${field.minLength} characters`;
+                } else if (field.validity.tooLong) {
+                    message = `${fieldName} must be no more than ${field.maxLength} characters`;
+                } else if (field.validity.patternMismatch) {
+                    message = field.title || `${fieldName} format is invalid`;
+                } else {
+                    message = field.validationMessage || `${fieldName} is invalid`;
+                }
+
+                // Show toast (only once per form submission)
+                if (!form.dataset.validationToastShown) {
+                    showToast('warning', 'Validation Error', message);
+                    form.dataset.validationToastShown = 'true';
+                    setTimeout(() => delete form.dataset.validationToastShown, 100);
+                }
+
+                // Focus and highlight the invalid field
+                field.focus();
+                field.classList.add('shake');
+                setTimeout(() => field.classList.remove('shake'), 500);
+            }, true);
+        });
 
         // ============================================================
         // GLOBAL FORM LOADING STATES

@@ -509,8 +509,8 @@
                         <i class="fas fa-play"></i>
                         Generate
                     </a>
-                    <a href="/profiles/{{ profile.id }}" class="btn btn-secondary btn-icon" onclick="event.stopPropagation()" title="Settings">
-                        <i class="fas fa-cog"></i>
+                    <a href="/profiles/{{ profile.id }}" class="btn btn-secondary btn-icon" onclick="event.stopPropagation()" title="Settings" aria-label="Podcast settings">
+                        <i class="fas fa-cog" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
@@ -546,8 +546,8 @@
 
         <div class="card" style="padding: 0;">
             {% for episode in recent_episodes[:8] %}
-            <a href="/episodes/{{ episode.id }}" class="episode-item" style="text-decoration: none; color: inherit;">
-                <div class="episode-play {% if not episode.audio_path %}disabled{% endif %}">
+            <a href="/episodes/{{ episode.id }}" class="episode-item" style="text-decoration: none; color: inherit;" aria-label="View episode: {{ episode.title }}">
+                <div class="episode-play {% if not episode.audio_path %}disabled{% endif %}" aria-hidden="true">
                     <i class="fas fa-play"></i>
                 </div>
 

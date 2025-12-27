@@ -182,13 +182,13 @@
             if (response.ok) {
                 window.location.href = '/jobs/{{ job.job_id }}';
             } else {
-                alert('Error saving script');
+                showToast('error', 'Save Failed', 'Error saving script. Please try again.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Retry';
             }
         } catch (e) {
             console.error(e);
-            alert('Network error');
+            showToast('error', 'Network Error', 'Could not connect to server. Check your connection.');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Retry';
         }

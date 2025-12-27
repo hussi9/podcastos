@@ -150,7 +150,7 @@ async function getAISuggestion() {
     const idea = document.getElementById('ideaInput').value.trim();
     
     if (!idea) {
-        alert('Please describe your podcast idea first');
+        showToast('warning', 'Missing Information', 'Please describe your podcast idea first');
         return;
     }
     
@@ -172,7 +172,7 @@ async function getAISuggestion() {
         document.getElementById('aiText').innerHTML = data.suggestion.replace(/\n/g, '<br>');
         
     } catch (error) {
-        alert('AI suggestion failed. Please try again.');
+        showToast('error', 'AI Error', 'AI suggestion failed. Please try again.');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-magic"></i> Help me refine this';
@@ -251,7 +251,7 @@ function toggleSource(checkbox) {
 document.getElementById('wizardForm').addEventListener('submit', (e) => {
     const idea = document.getElementById('ideaInput').value.trim();
     const name = generateName(idea);
-    
+
     document.getElementById('hiddenName').value = name;
     document.getElementById('hiddenDescription').value = idea;
     document.getElementById('hiddenAudience').value = document.getElementById('audienceInput').value;
@@ -260,6 +260,13 @@ document.getElementById('wizardForm').addEventListener('submit', (e) => {
     document.getElementById('hiddenDuration').value = document.getElementById('durationInput').value;
     document.getElementById('hiddenLanguage').value = document.getElementById('languageInput').value;
     document.getElementById('hiddenTopicCount').value = document.getElementById('topicCountInput').value;
+
+    // Loading state
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
+    }
 });
 
 function generateName(idea) {

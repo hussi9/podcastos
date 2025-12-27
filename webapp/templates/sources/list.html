@@ -111,8 +111,9 @@
                     <td style="padding: var(--space-md) var(--space-lg); text-align: right;">
                         <form method="POST" action="/profiles/{{ profile.id }}/sources/{{ source.id }}/delete"
                               style="display: inline;" onsubmit="return confirm('Delete this source?')">
-                            <button type="submit" style="background: none; border: none; color: var(--error); cursor: pointer; padding: var(--space-sm);">
-                                <i class="fas fa-trash"></i>
+                            <button type="submit" style="background: none; border: none; color: var(--error); cursor: pointer; padding: var(--space-sm);"
+                                    aria-label="Delete source {{ source.name }}" title="Delete source">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
                             </button>
                         </form>
                     </td>

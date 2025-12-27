@@ -564,7 +564,7 @@
         pollProgress(data.job_id);
                 
             } catch (error) {
-            alert('Failed to start generation: ' + error.message);
+            showToast('error', 'Generation Failed', 'Failed to start generation: ' + error.message);
             document.getElementById('progressOverlay').classList.remove('active');
         }
         }
@@ -589,7 +589,7 @@
                         }, 1500);
                     } else if (data.status === 'failed') {
                         clearInterval(interval);
-                        alert('Generation failed: ' + (data.error || 'Unknown error'));
+                        showToast('error', 'Generation Failed', data.error || 'Unknown error occurred');
                         document.getElementById('progressOverlay').classList.remove('active');
                     }
                 } catch (error) {
