@@ -522,12 +522,13 @@ class PodcastEngine:
         target_date: Optional[datetime] = None,
         topic_count: int = 5,
         target_duration_minutes: int = 12,
+        subreddits: list[str] = None,
     ) -> PodcastScript:
         """Generate only the script (no audio)"""
         if not target_date:
             target_date = datetime.now()
 
-        topics = await self.content_ranker.get_ranked_topics(limit=topic_count)
+        topics = await self.content_ranker.get_ranked_topics(limit=topic_count, subreddits=subreddits)
 
         script = await self.script_generator.generate_script(
             topics=topics,

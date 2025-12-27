@@ -159,8 +159,8 @@ Return ONLY valid JSON, no markdown.'''
             if json_match:
                 try:
                     return json.loads(json_match.group())
-                except:
-                    pass
+                except json.JSONDecodeError:
+                    logger.warning("Secondary JSON parse also failed in editorial review")
             return None
 
 
@@ -241,8 +241,9 @@ class EpisodeHistoryTracker:
                 ep_date = datetime.fromisoformat(ep.get("date", "")[:10])
                 if ep_date >= cutoff:
                     topics.extend(ep.get("topics", []))
-            except:
-                pass
+            except (ValueError, TypeError, AttributeError):
+                # Skip entries with invalid date formats
+                continue
 
         return list(set(topics))
 

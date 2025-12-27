@@ -1,0 +1,75 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-sonnet-4-20250514
+          prompt: |
+            Review this pull request for:
+            1. Code quality and best practices
+            2. Potential bugs or security issues
+            3. Performance considerations
+            4. Test coverage adequacy
+            5. Documentation completeness
+
+            Provide specific, actionable feedback with file paths and line numbers.
+          max_turns: 10
+          allowed_tools: |
+            Read
+            Grep
+            Glob
+            Bash(git diff:*)
+            Bash(git log:*)
+
+  claude-security:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Claude Security Audit
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-sonnet-4-20250514
+          prompt: |
+            Perform a security audit on the changed files:
+            1. Check for hardcoded secrets or API keys
+            2. Look for SQL injection vulnerabilities
+            3. Check for XSS vulnerabilities
+            4. Verify input validation
+            5. Check for insecure dependencies
+
+            Report any security issues found with severity level.
+          max_turns: 5
+          allowed_tools: |
+            Read
+            Grep
+            Glob

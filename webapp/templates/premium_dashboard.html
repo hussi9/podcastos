@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile.name }} - Podcast Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav a {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover,
+        .nav a.active {
+            color: #1a1a1a;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Main CTA Section */
+        .hero-section {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .hero-section h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .hero-section p {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-generate {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn-generate:hover {
+            background: #2d2d2d;
+            transform: translateY(-1px);
+        }
+
+        .hero-meta {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        /* Episodes List */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .episodes-container {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .episode-row {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .episode-row:hover {
+            background: #f9fafb;
+        }
+
+        .episode-row:last-child {
+            border-bottom: none;
+        }
+
+        .episode-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .episode-meta {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .episode-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #1a1a1a;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2d2d2d;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Progress Overlay */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-overlay.active {
+            display: flex;
+        }
+
+        .progress-card {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .progress-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #1a1a1a;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-stage {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-top: 1rem;
+        }
+
+        .progress-percent {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 1rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .episode-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🎙️ {{ profile.name }}</div>
+            <nav class="nav">
+                <a href="/" class="active">Episodes</a>
+                <a href="/newsletters">Newsletters</a>
+                <a href="/settings">Settings</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero CTA -->
+        <div class="hero-section">
+            <h1>Generate New Podcast Episode</h1>
+            <p>AI-powered research, writing, and production in minutes</p>
+            <button class="btn-generate" onclick="openGenerateModal()">
+                Create Episode
+            </button>
+            <div class="hero-meta">
+                Powered by Gemini AI • $0.30 per episode • ~10 minute generation
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Episodes</div>
+                <div class="stat-value">{{ episodes|length }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Cost/Episode</div>
+                <div class="stat-value">$0.30</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Avg Quality</div>
+                <div class="stat-value">92%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">This Month</div>
+                <div class="stat-value">{{ episodes|length }}</div>
+            </div>
+        </div>
+
+        <!-- Episodes List -->
+        <div class="section-header">
+            <h2>Recent Episodes</h2>
+        </div>
+
+        <div class="episodes-container">
+            {% if episodes %}
+            {% for episode in episodes[:10] %}
+            <div class="episode-row">
+                <div class="episode-info">
+                    <h3>{{ episode.title }}</h3>
+                    <div class="episode-meta">
+                        {{ episode.generated_at.strftime('%b %d, %Y') }} •
+                        {{ episode.status|title }}
+                    </div>
+                </div>
+                <div class="episode-actions">
+                    <a href="/episodes/{{ episode.id }}" class="btn btn-secondary">View</a>
+                    {% if episode.audio_file_path %}
+                    <button class="btn btn-primary">Play</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                <p>No episodes yet. Create your first one!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Generate Modal -->
+    <div class="modal-overlay" id="generateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Generate New Episode</h2>
+            </div>
+            <form id="generateForm" onsubmit="startGeneration(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Episode Topic *</label>
+                        <input type="text" class="form-input" id="topic" required
+                            placeholder="e.g., Latest AI developments in healthcare">
+                        <div class="form-help">Be specific for better results</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Additional Context (Optional)</label>
+                        <textarea class="form-input" id="notes"
+                            placeholder="Any specific angles, sources, or points to cover..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeGenerateModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Generate Episode
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Progress Overlay -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+            <h3>Generating Your Episode</h3>
+            <div class="progress-percent" id="progressPercent">0%</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-stage" id="progressStage">Initializing...</div>
+        </div>
+    </div>
+
+    <script>
+        function openGenerateModal() {
+            document.getElementById('generateModal').classList.add('active');
+            document.getElementById('topic').focus();
+        }
+
+        function closeGenerateModal() {
+            document.getElementById('generateModal').classList.remove('active');
+        }
+
+        async function startGeneration(e) {
+            e.preventDefault();
+
+            const topic = document.getElementById('topic').value;
+            const notes = document.getElementById('notes').value;
+
+            // Close modal, show progress
+            closeGenerateModal();
+            document.getElementById('progressOverlay').classList.add('active');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        profile_id: {{ profile.id }},
+                    topic: topic,
+                    notes: notes
+                    })
+        });
+
+        const data = await response.json();
+        pollProgress(data.job_id);
+                
+            } catch (error) {
+            alert('Failed to start generation: ' + error.message);
+            document.getElementById('progressOverlay').classList.remove('active');
+        }
+        }
+
+        async function pollProgress(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/jobs/${jobId}`);
+                    const data = await response.json();
+
+                    // Update UI
+                    document.getElementById('progressPercent').textContent = data.progress + '%';
+                    document.getElementById('progressBar').style.width = data.progress + '%';
+                    document.getElementById('progressStage').textContent =
+                        data.current_stage ? formatStage(data.current_stage) : 'Processing...';
+
+                    // Check completion
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else if (data.status === 'failed') {
+                        clearInterval(interval);
+                        alert('Generation failed: ' + (data.error || 'Unknown error'));
+                        document.getElementById('progressOverlay').classList.remove('active');
+                    }
+                } catch (error) {
+                    console.error('Progress check failed:', error);
+                }
+            }, 2000);
+        }
+
+        function formatStage(stage) {
+            const stages = {
+                'research': 'Conducting deep research...',
+                'synthesis': 'Synthesizing information...',
+                'script': 'Writing script...',
+                'audio': 'Generating audio...',
+                'newsletter': 'Creating newsletter...',
+                'finalizing': 'Finalizing episode...'
+            };
+            return stages[stage] || stage;
+        }
+
+        // Close modal on outside click
+        document.getElementById('generateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'generateModal') {
+                closeGenerateModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

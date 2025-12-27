@@ -29,8 +29,12 @@ cryptography>=41.0.0
 
 # ===== NEW: Agentic Content Intelligence =====
 
-# Google AI (Primary)
-google-genai>=1.0.0
+# Google AI Stack (Primary)
+google-genai>=1.0.0  # Gemini 2.0 Flash Thinking + Deep Research
+google-adk>=0.1.0     # Agent Development Kit
+google-cloud-texttospeech>=2.14.0
+google-cloud-storage>=2.10.0
+google-cloud-secret-manager>=2.16.0
 
 # Semantic Processing (Local - FREE)
 sentence-transformers>=3.0.0
@@ -38,12 +42,32 @@ numpy>=1.24.0
 scikit-learn>=1.3.0
 hdbscan>=0.8.33
 
-# Content Aggregation
-newsdataapi>=0.1.0
-youtube-transcript-api>=0.6.0
+# Async support for agents
+aiohttp>=3.9.0
 
-# Complementary Search (for counter-arguments)
-exa-py>=1.0.0
+# ===== Multi-Source Content Aggregation =====
+# Universal content discovery for ANY podcast topic
+
+# Social Media
+praw>=7.7.0  # Reddit (already listed above but keeping here for clarity)
+Scweet>=1.4.0  # Twitter/X scraping (no API needed)
+
+# Video & Transcripts
+youtube-transcript-api>=0.6.2  # YouTube video transcripts
+yt-dlp>=2023.12.0  # YouTube metadata & downloads
+
+# RSS & News
+feedparser>=6.0.0  # RSS feed parsing (already listed above)
+newspaper3k>=0.2.8  # Article extraction & NLP
+beautifulsoup4>=4.12.0  # Web scraping
+
+# Multi-source aggregation tools
+newsdataapi>=0.1.0  # News API
+exa-py>=1.0.0  # Complementary search
+
+# Additional scrapers (optional but useful)
+playwright>=1.40.0  # Browser automation for complex scraping
+selenium>=4.15.0  # Alternative browser automation
 
 # Email
 resend>=2.0.0
@@ -52,9 +76,32 @@ email-validator>=2.1.0
 # Audio Processing
 google-cloud-texttospeech>=2.14.0
 pydub>=0.25.0
+audioop-lts>=0.2.2  # Python 3.13+ compatibility for pydub
 
 # Database
 psycopg2-binary>=2.9.0
+alembic>=1.13.0  # Database migrations
+redis>=5.0.0  # Caching and job queue (optional)
+
+# ===== OPTIMIZED WORKFLOW STACK =====
+# Local LLM Inference (FREE alternative to paid APIs)
+ollama>=0.1.0  # Easy local LLM management (Mixtral, Llama, etc.)
+
+# Vector Database for RAG (FREE)
+chromadb>=0.4.0  # Lightweight vector DB for semantic search
+qdrant-client>=1.7.0  # Alternative: High-performance vector DB
+
+# Open Source TTS (FREE alternatives)
+parler-tts>=0.1.0  # Lightweight, natural TTS
+TTS>=0.20.0  # Coqui TTS (XTTS-v2)
+# Note: For production, Google TTS ($0.02/ep) is still recommended
+
+# Workflow Orchestration
+# n8n: Install separately (npm install -g n8n)
+# Alternative: Apache Airflow, Prefect (see WORKFLOW_OPTIMIZATION_GUIDE.md)
+
+# Enhanced embeddings
+sentence-transformers>=3.0.0  # For semantic search (already listed above)
 
 # Dev
 pytest>=7.4.0

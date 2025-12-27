@@ -54,20 +54,89 @@ class AuthResult(BaseModel):
 
 # ============== Auth Service ==============
 
+class AuthNotConfiguredError(Exception):
+    """Raised when authentication service is not properly configured."""
+    pass
+
+
 class AuthService:
     """
     Authentication service using Supabase Auth.
+    
+    Provides graceful degradation when Supabase is not configured.
     """
+    
+    _instance = None
+    _initialized = False
+    _available = False
+    _error_message = None
 
-    def __init__(self):
+    def __init__(self, raise_on_error: bool = False):
+        """
+        Initialize auth service.
+        
+        Args:
+            raise_on_error: If True, raise exception when not configured.
+                           If False, service will be in degraded mode.
+        """
         url = os.getenv("SUPABASE_URL")
         key = os.getenv("SUPABASE_ANON_KEY")  # Use anon key for auth
-
-        if not url or not key:
-            raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set")
-
-        self.client: Client = create_client(url, key)
-        logger.info("Auth service initialized")
+        
+        missing = []
+        if not url:
+            missing.append("SUPABASE_URL")
+        if not key:
+            missing.append("SUPABASE_ANON_KEY")
+        
+        if missing:
+            self._error_message = f"Missing environment variables: {', '.join(missing)}"
+            self._available = False
+            self.client = None
+            
+            if raise_on_error:
+                raise AuthNotConfiguredError(
+                    f"{self._error_message}. "
+                    "Please set these environment variables to enable authentication.\n"
+                    "Get your credentials at: https://supabase.com/dashboard"
+                )
+            else:
+                logger.warning(
+                    f"⚠️  Auth service running in DEMO MODE: {self._error_message}. "
+                    "Authentication features will be disabled."
+                )
+                return
+        
+        try:
+            self.client: Client = create_client(url, key)
+            self._available = True
+            self._error_message = None
+            logger.info("✅ Auth service initialized successfully")
+        except Exception as e:
+            self._error_message = f"Failed to initialize Supabase client: {e}"
+            self._available = False
+            self.client = None
+            
+            if raise_on_error:
+                raise AuthNotConfiguredError(self._error_message)
+            else:
+                logger.warning(f"⚠️  Auth service in DEMO MODE: {self._error_message}")
+    
+    @property
+    def is_available(self) -> bool:
+        """Check if authentication service is available."""
+        return self._available
+    
+    @property
+    def error_message(self) -> Optional[str]:
+        """Get error message if service is not available."""
+        return self._error_message
+    
+    def _check_available(self) -> bool:
+        """Check if service is available, log warning if not."""
+        if not self._available:
+            logger.warning("Auth operation attempted but service is not configured")
+            return False
+        return True
 
     async def sign_up(self, request: SignUpRequest) -> AuthResult:
         """
@@ -79,6 +148,12 @@ class AuthService:
         Returns:
             AuthResult with user info or error
         """
+        if not self._check_available():
+            return AuthResult(
+                success=False,
+                error="Authentication service is not configured. Please contact support."
+            )
+        
         try:
             # Sign up with Supabase Auth
             response = self.client.auth.sign_up({
@@ -126,6 +201,12 @@ class AuthService:
         Returns:
             AuthResult with user info and tokens or error
         """
+        if not self._check_available():
+            return AuthResult(
+                success=False,
+                error="Authentication service is not configured. Please contact support."
+            )
+        
         try:
             response = self.client.auth.sign_in_with_password({
                 "email": request.email,

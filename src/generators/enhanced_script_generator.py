@@ -59,7 +59,7 @@ class EnhancedScriptGenerator:
     Generates natural, fact-rich podcast scripts using deep research.
     """
 
-    SYSTEM_PROMPT = '''You are writing a podcast script for "Desi Daily" - a news podcast for South Asian immigrants in America.
+    SYSTEM_PROMPT = '''You are writing a podcast script for "{podcast_name}" - a news podcast.
 Write like TWO INTELLIGENT FRIENDS having a genuine, thoughtful conversation about news that affects their community.
 
 THE HOSTS:
@@ -140,6 +140,7 @@ Speaker must be lowercase "raj" or "priya". Make each segment 8-12 dialogue exch
         episode_date: Optional[datetime] = None,
         target_duration_minutes: int = 15,
         continuity_context: str = "",
+        podcast_name: str = "Desi Daily",
     ) -> PodcastScript:
         """Generate a podcast script from deeply researched topics"""
 
@@ -152,8 +153,9 @@ Speaker must be lowercase "raj" or "priya". Make each segment 8-12 dialogue exch
         # Build rich prompt with all research
         research_content = self._format_research_for_prompt(researched_topics)
 
-        # Format system prompt with continuity context
+        # Format system prompt with continuity context and podcast name
         system_prompt = self.SYSTEM_PROMPT.format(
+            podcast_name=podcast_name,
             continuity_context=continuity_context if continuity_context else ""
         )
 
@@ -161,7 +163,7 @@ Speaker must be lowercase "raj" or "priya". Make each segment 8-12 dialogue exch
 
 ---
 
-Generate a podcast script for Desi Daily - {day_of_week}, {date_str}
+Generate a podcast script for {podcast_name} - {day_of_week}, {date_str}
 
 Target duration: {target_duration_minutes} minutes (longer, more in-depth segments)
 Number of topics: {len(researched_topics)}
@@ -197,7 +199,7 @@ Return ONLY the JSON, no markdown code blocks.'''
 
             # Build script object
             episode_id = f"dd-{episode_date.strftime('%Y%m%d')}"
-            episode_title = self._generate_episode_title(researched_topics, episode_date)
+            episode_title = self._generate_episode_title(researched_topics, episode_date, podcast_name)
 
             intro_lines = [
                 DialogueLine(speaker=line["speaker"].lower(), text=line["text"])
@@ -353,12 +355,12 @@ Return ONLY the JSON, no markdown code blocks.'''
             if json_match:
                 try:
                     return json.loads(json_match.group())
-                except:
-                    pass
+                except json.JSONDecodeError:
+                    logger.warning("Secondary JSON parse also failed")
             logger.error("Failed to parse script response")
             return {"intro": [], "segments": [], "outro": []}
 
-    def _generate_episode_title(self, researched_topics: list[TopicResearch], episode_date: datetime) -> str:
+    def _generate_episode_title(self, researched_topics: list[TopicResearch], episode_date: datetime, podcast_name: str = "Podcast") -> str:
         """Generate episode title from top topic"""
         date_str = episode_date.strftime("%b %d")
         if researched_topics:
@@ -366,5 +368,5 @@ Return ONLY the JSON, no markdown code blocks.'''
             # Shorten if too long
             if len(main_topic) > 40:
                 main_topic = main_topic[:37] + "..."
-            return f"{main_topic} | Desi Daily - {date_str}"
-        return f"Daily Update | Desi Daily - {date_str}"
+            return f"{main_topic} | {podcast_name} - {date_str}"
+        return f"Daily Update | {podcast_name} - {date_str}"

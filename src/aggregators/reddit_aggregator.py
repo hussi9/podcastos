@@ -182,10 +182,11 @@ class RedditAggregator:
         return all_posts
 
     async def get_trending_topics(
-        self, min_score: int = 50, min_comments: int = 10, limit: int = 20
+        self, min_score: int = 50, min_comments: int = 10, limit: int = 20,
+        subreddits: Optional[list[str]] = None
     ) -> list[RedditPost]:
         """Get trending topics with high engagement"""
-        all_posts = await self.fetch_all_posts()
+        all_posts = await self.fetch_all_posts(subreddits=subreddits)
 
         # Filter for high-engagement posts
         trending = [

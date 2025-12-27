@@ -1,0 +1,751 @@
+{% extends "base.html" %}
+
+{% block title %}{{ newsletter.title }} - Newsletter{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* NYT-Inspired Typography & Layout */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap');
+
+    .newsletter-container {
+        font-family: 'Source Serif 4', Georgia, serif;
+        max-width: 780px;
+        margin: 0 auto;
+        background: #fff;
+        color: #121212;
+    }
+
+    .newsletter-masthead {
+        text-align: center;
+        padding: 2rem 1rem;
+        border-bottom: 3px double #121212;
+        margin-bottom: 2rem;
+    }
+
+    .newsletter-logo {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 2.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: #121212;
+    }
+
+    .newsletter-tagline {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .newsletter-date {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .newsletter-hero {
+        position: relative;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+
+    .newsletter-hero img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+
+    .newsletter-hero-caption {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.75rem;
+        color: #666;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .newsletter-headline {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1.15;
+        margin: 0 0 1rem 0;
+        color: #121212;
+    }
+
+    .newsletter-subtitle {
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 1.375rem;
+        font-weight: 400;
+        line-height: 1.4;
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+
+    .newsletter-meta {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.8rem;
+        color: #666;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e5e5e5;
+        margin-bottom: 2rem;
+    }
+
+    .newsletter-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .newsletter-intro {
+        font-size: 1.25rem;
+        line-height: 1.7;
+        color: #333;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+        border-left: 4px solid #121212;
+        margin-bottom: 3rem;
+        font-style: italic;
+    }
+
+    .newsletter-section {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .newsletter-section:last-of-type {
+        border-bottom: none;
+    }
+
+    .section-category {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #c41e3a;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .section-headline {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+        line-height: 1.25;
+        margin: 0 0 1rem 0;
+        color: #121212;
+    }
+
+    .section-image {
+        margin: 1.25rem 0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .section-image img {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+    }
+
+    .section-image-caption {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.75rem;
+        color: #666;
+        padding: 0.5rem 0;
+        font-style: italic;
+    }
+
+    .section-body {
+        font-size: 1.125rem;
+        line-height: 1.8;
+        color: #333;
+    }
+
+    .section-body p {
+        margin-bottom: 1.25rem;
+    }
+
+    .section-body p:first-of-type::first-letter {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        float: left;
+        line-height: 1;
+        margin-right: 0.5rem;
+        margin-top: 0.1rem;
+        color: #121212;
+    }
+
+    .section-sources {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.8rem;
+        color: #666;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 1.5rem;
+    }
+
+    .section-sources-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-sources ul {
+        margin: 0;
+        padding-left: 1.25rem;
+        list-style-type: square;
+    }
+
+    .section-sources li {
+        margin-bottom: 0.25rem;
+    }
+
+    .newsletter-divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2.5rem 0;
+        color: #ccc;
+    }
+
+    .newsletter-divider::before,
+    .newsletter-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e5e5e5;
+    }
+
+    .newsletter-divider i {
+        font-size: 0.75rem;
+    }
+
+    .newsletter-outro {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #333;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+
+    .newsletter-footer {
+        text-align: center;
+        padding: 2rem 1rem;
+        margin-top: 3rem;
+        border-top: 3px double #121212;
+        font-family: 'Source Sans 3', sans-serif;
+    }
+
+    .newsletter-footer-logo {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .newsletter-footer-text {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .newsletter-social {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .newsletter-social a {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        transition: all 0.2s;
+    }
+
+    .newsletter-social a:hover {
+        background: #121212;
+        color: #fff;
+    }
+
+    /* Pull Quote */
+    .pull-quote {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.5rem;
+        font-style: italic;
+        line-height: 1.4;
+        color: #333;
+        padding: 1.5rem 2rem;
+        border-left: 4px solid #c41e3a;
+        margin: 2rem 0;
+        background: #fafafa;
+    }
+
+    /* Key Takeaways */
+    .key-takeaways {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+
+    .key-takeaways-title {
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #ffd700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .key-takeaways ul {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+
+    .key-takeaways li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+
+    /* Toolbar */
+    .newsletter-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e5e5e5;
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .toolbar-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #666;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .toolbar-back:hover {
+        color: #121212;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .toolbar-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        font-family: 'Source Sans 3', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e5e5;
+        background: #fff;
+        color: #333;
+    }
+
+    .toolbar-btn:hover {
+        background: #f5f5f5;
+    }
+
+    .toolbar-btn-primary {
+        background: #121212;
+        color: #fff;
+        border-color: #121212;
+    }
+
+    .toolbar-btn-primary:hover {
+        background: #333;
+    }
+
+    /* Reading Progress */
+    .reading-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 3px;
+        background: linear-gradient(90deg, #c41e3a, #e63946);
+        z-index: 1000;
+        transition: width 0.1s;
+    }
+
+    /* Print Styles */
+    @media print {
+        .newsletter-toolbar, .reading-progress {
+            display: none;
+        }
+
+        .newsletter-container {
+            max-width: 100%;
+        }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .newsletter-container {
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+        }
+
+        .newsletter-masthead {
+            border-bottom-color: var(--border-color);
+        }
+
+        .newsletter-logo, .section-headline, .newsletter-headline {
+            color: var(--color-text-primary);
+        }
+
+        .section-body, .newsletter-intro, .newsletter-outro {
+            color: var(--color-text-secondary);
+        }
+
+        .newsletter-intro, .newsletter-outro, .section-sources {
+            background: var(--color-bg-secondary);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Reading Progress Bar -->
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- Toolbar -->
+<div class="newsletter-toolbar">
+    <div class="toolbar-left">
+        <a href="/episodes/{{ newsletter.episode_id }}" class="toolbar-back">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Episode</span>
+        </a>
+        <span style="color: #ccc;">|</span>
+        <span style="font-family: 'Source Sans 3', sans-serif; font-size: 0.8rem; color: #666;">
+            <i class="far fa-clock"></i> {{ newsletter.reading_time_minutes }} min read
+        </span>
+    </div>
+    <div class="toolbar-actions">
+        <button onclick="window.print()" class="toolbar-btn">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <button onclick="shareNewsletter()" class="toolbar-btn">
+            <i class="fas fa-share-alt"></i> Share
+        </button>
+        <button onclick="copyToClipboard()" class="toolbar-btn">
+            <i class="far fa-copy"></i> Copy HTML
+        </button>
+        <button onclick="generateImages()" class="toolbar-btn toolbar-btn-primary" id="generateImagesBtn">
+            <i class="fas fa-image"></i> Generate Images
+        </button>
+    </div>
+</div>
+
+<!-- Newsletter Container -->
+<div class="newsletter-container">
+    <!-- Masthead -->
+    <header class="newsletter-masthead">
+        <h1 class="newsletter-logo">{{ profile.name if profile else 'Newsletter' }}</h1>
+        <p class="newsletter-tagline">Your Daily Intelligence Brief</p>
+        <p class="newsletter-date">{{ newsletter.issue_date.strftime('%A, %B %d, %Y') if newsletter.issue_date else 'Today' }}</p>
+    </header>
+
+    <!-- Hero Image (if available) -->
+    {% if newsletter.sections and newsletter.sections[0].get('image_url') %}
+    <div class="newsletter-hero">
+        <img src="{{ newsletter.sections[0].image_url }}" alt="Featured image">
+        <p class="newsletter-hero-caption">{{ newsletter.sections[0].get('image_caption', 'AI-generated illustration') }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Main Headline -->
+    <h1 class="newsletter-headline">{{ newsletter.title }}</h1>
+    <p class="newsletter-subtitle">{{ newsletter.subtitle }}</p>
+
+    <!-- Meta Info -->
+    <div class="newsletter-meta">
+        <div class="newsletter-meta-item">
+            <i class="far fa-calendar-alt"></i>
+            <span>{{ newsletter.issue_date.strftime('%B %d, %Y') if newsletter.issue_date else 'Today' }}</span>
+        </div>
+        <div class="newsletter-meta-item">
+            <i class="far fa-clock"></i>
+            <span>{{ newsletter.reading_time_minutes }} min read</span>
+        </div>
+        <div class="newsletter-meta-item">
+            <i class="fas fa-align-left"></i>
+            <span>{{ newsletter.total_word_count }} words</span>
+        </div>
+        <div class="newsletter-meta-item">
+            <i class="fas fa-newspaper"></i>
+            <span>{{ newsletter.sections|length }} stories</span>
+        </div>
+    </div>
+
+    <!-- Intro -->
+    <div class="newsletter-intro">
+        {{ newsletter.intro | replace('\n', '<br>') | safe }}
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="key-takeaways">
+        <div class="key-takeaways-title">
+            <i class="fas fa-list"></i> In This Edition
+        </div>
+        <ul>
+            {% for section in newsletter.sections %}
+            <li><a href="#section-{{ loop.index }}" style="color: #fff; text-decoration: none; border-bottom: 1px dotted #fff;">{{ section.headline }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Sections -->
+    {% for section in newsletter.sections %}
+    <article class="newsletter-section" id="section-{{ loop.index }}">
+        <p class="section-category">
+            {% if section.category %}{{ section.category }}{% else %}Story {{ loop.index }}{% endif %}
+        </p>
+
+        <h2 class="section-headline">{{ section.headline }}</h2>
+
+        {% if section.image_url %}
+        <div class="section-image">
+            <img src="{{ section.image_url }}" alt="{{ section.headline }}" id="section-img-{{ loop.index }}">
+            <p class="section-image-caption">{{ section.image_caption if section.image_caption else 'AI-generated illustration' }}</p>
+        </div>
+        {% else %}
+        <div class="section-image" id="section-img-container-{{ loop.index }}" style="display: none;">
+            <img src="" alt="{{ section.headline }}" id="section-img-{{ loop.index }}">
+            <p class="section-image-caption">AI-generated illustration</p>
+        </div>
+        {% endif %}
+
+        <div class="section-body">
+            {% set paragraphs = section.body.split('\n\n') if section.body else [section.body] %}
+            {% for para in paragraphs %}
+                {% if para.strip() %}
+                <p>{{ para }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if section.key_points %}
+        <div class="key-takeaways" style="margin-top: 1.5rem;">
+            <div class="key-takeaways-title">
+                <i class="fas fa-lightbulb"></i> Key Takeaways
+            </div>
+            <ul>
+                {% for point in section.key_points %}
+                <li>{{ point }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if section.sources %}
+        <div class="section-sources">
+            <div class="section-sources-title">
+                <i class="fas fa-link"></i> Sources & References
+            </div>
+            <ul>
+                {% for source in section.sources %}
+                <li>{{ source }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </article>
+
+    {% if not loop.last %}
+    <div class="newsletter-divider">
+        <i class="fas fa-circle"></i>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Outro -->
+    <div class="newsletter-outro">
+        <strong style="display: block; margin-bottom: 0.75rem;">Until Next Time</strong>
+        {{ newsletter.outro | replace('\n', '<br>') | safe }}
+    </div>
+
+    <!-- Footer -->
+    <footer class="newsletter-footer">
+        <div class="newsletter-footer-logo">{{ profile.name if profile else 'Newsletter' }}</div>
+        <p class="newsletter-footer-text">
+            Curated with care. Delivered with purpose.<br>
+            &copy; 2025 All rights reserved.
+        </p>
+        <div class="newsletter-social">
+            <a href="#" title="Share on Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" title="Share on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" title="Share via Email"><i class="fas fa-envelope"></i></a>
+            <a href="#" title="Copy Link"><i class="fas fa-link"></i></a>
+        </div>
+    </footer>
+</div>
+
+<!-- Raw HTML for copying -->
+<textarea id="rawHtml" style="display: none;">{{ newsletter.html_content }}</textarea>
+
+<script>
+    // Reading Progress
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        document.getElementById('readingProgress').style.width = scrolled + '%';
+    });
+
+    // Copy to Clipboard
+    function copyToClipboard() {
+        const copyText = document.getElementById("rawHtml");
+        copyText.style.display = "block";
+        copyText.select();
+        document.execCommand("copy");
+        copyText.style.display = "none";
+
+        // Show toast
+        showToast('Newsletter HTML copied to clipboard!');
+    }
+
+    // Share Newsletter
+    function shareNewsletter() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ newsletter.title }}',
+                text: '{{ newsletter.subtitle }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy URL
+            navigator.clipboard.writeText(window.location.href);
+            showToast('Link copied to clipboard!');
+        }
+    }
+
+    // Generate Images using AI
+    async function generateImages() {
+        const btn = document.getElementById('generateImagesBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+        try {
+            const response = await fetch('/api/newsletters/{{ newsletter.id }}/generate-images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                showToast('Images generated! Refreshing...');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                const error = await response.json();
+                showToast('Error: ' + (error.error || 'Failed to generate images'), 'error');
+            }
+        } catch (e) {
+            showToast('Error generating images: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-image"></i> Generate Images';
+        }
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${type === 'error' ? '#dc3545' : '#28a745'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Smooth scroll for TOC links
+    document.querySelectorAll('a[href^="#section-"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        });
+    });
+</script>
+
+<style>
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+</style>
+{% endblock %}

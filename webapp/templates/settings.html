@@ -1,0 +1,1403 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Podcast Studio{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-layout {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: var(--space-xl);
+        max-width: 1100px;
+    }
+
+    /* Settings Navigation */
+    .settings-nav {
+        position: sticky;
+        top: var(--space-lg);
+        height: fit-content;
+    }
+
+    .settings-nav-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all var(--transition-fast);
+        margin-bottom: var(--space-xs);
+    }
+
+    .settings-nav-item:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+
+    .settings-nav-item.active {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .settings-nav-item i {
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Settings Sections */
+    .settings-section {
+        scroll-margin-top: var(--space-xl);
+    }
+
+    .settings-section:not(:last-child) {
+        margin-bottom: var(--space-2xl);
+        padding-bottom: var(--space-2xl);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+    }
+
+    .section-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: var(--space-lg);
+    }
+
+    /* Setting Items */
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: var(--space-lg) 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .setting-info {
+        flex: 1;
+        padding-right: var(--space-xl);
+    }
+
+    .setting-label {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .setting-description {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .setting-control {
+        flex-shrink: 0;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        width: 52px;
+        height: 28px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-tertiary);
+        transition: 0.3s;
+        border-radius: 28px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--accent);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(24px);
+    }
+
+    /* Range Slider */
+    .range-container {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .range-slider {
+        width: 200px;
+        height: 6px;
+        border-radius: var(--radius-full);
+        background: var(--bg-tertiary);
+        appearance: none;
+        cursor: pointer;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .range-value {
+        min-width: 60px;
+        text-align: center;
+        font-weight: 500;
+        color: var(--accent);
+    }
+
+    /* Select Dropdown */
+    .setting-select {
+        min-width: 180px;
+        padding: var(--space-sm) var(--space-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--bg-primary);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .setting-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    /* API Keys */
+    .api-key-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-sm);
+    }
+
+    .api-key-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .api-key-icon.gemini {
+        background: #e8f0fe;
+        color: #1a73e8;
+    }
+
+    .api-key-icon.elevenlabs {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .api-key-icon.openai {
+        background: #d1fae5;
+        color: #10b981;
+    }
+
+    .api-key-info {
+        flex: 1;
+    }
+
+    .api-key-name {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .api-key-status {
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .api-key-status.configured {
+        color: var(--success);
+    }
+
+    .api-key-status.missing {
+        color: var(--error);
+    }
+
+    /* Keyboard Shortcuts */
+    .shortcut-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+
+    .shortcut-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+    }
+
+    .shortcut-action {
+        font-size: 0.9rem;
+    }
+
+    .shortcut-keys {
+        display: flex;
+        gap: var(--space-xs);
+    }
+
+    .key {
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-family: monospace;
+        font-weight: 600;
+    }
+
+    /* Storage Info */
+    .storage-bar {
+        height: 8px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        margin-bottom: var(--space-sm);
+    }
+
+    .storage-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: var(--radius-full);
+    }
+
+    .storage-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    /* Theme Preview */
+    .theme-options {
+        display: flex;
+        gap: var(--space-md);
+    }
+
+    .theme-option {
+        width: 100px;
+        cursor: pointer;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 2px solid transparent;
+        transition: all var(--transition-fast);
+    }
+
+    .theme-option:hover {
+        border-color: var(--border-hover);
+    }
+
+    .theme-option.active {
+        border-color: var(--accent);
+    }
+
+    .theme-preview {
+        height: 60px;
+        display: flex;
+    }
+
+    .theme-preview-sidebar {
+        width: 30%;
+    }
+
+    .theme-preview-content {
+        width: 70%;
+    }
+
+    .theme-option.light .theme-preview-sidebar {
+        background: #f8f9fa;
+    }
+
+    .theme-option.light .theme-preview-content {
+        background: #ffffff;
+    }
+
+    .theme-option.dark .theme-preview-sidebar {
+        background: #1a1a2e;
+    }
+
+    .theme-option.dark .theme-preview-content {
+        background: #16213e;
+    }
+
+    .theme-option.system .theme-preview {
+        background: linear-gradient(135deg, #f8f9fa 50%, #1a1a2e 50%);
+    }
+
+    .theme-label {
+        text-align: center;
+        padding: var(--space-sm);
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    /* Danger Zone */
+    .danger-zone {
+        border: 1px solid var(--error);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        background: var(--error-light);
+    }
+
+    .danger-zone .section-title {
+        color: var(--error);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .settings-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .settings-nav {
+            position: static;
+            display: flex;
+            gap: var(--space-sm);
+            overflow-x: auto;
+            padding-bottom: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .settings-nav-item {
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+
+        .setting-item {
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .setting-info {
+            padding-right: 0;
+        }
+
+        .shortcut-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-description">Customize your Podcast Studio experience</p>
+</div>
+
+<div class="page-content">
+    <div class="settings-layout">
+        <!-- Settings Navigation -->
+        <nav class="settings-nav">
+            <a href="#general" class="settings-nav-item active">
+                <i class="fas fa-sliders-h"></i>
+                <span>General</span>
+            </a>
+            <a href="#generation" class="settings-nav-item">
+                <i class="fas fa-magic"></i>
+                <span>Generation</span>
+            </a>
+            <a href="#audio" class="settings-nav-item">
+                <i class="fas fa-volume-up"></i>
+                <span>Audio</span>
+            </a>
+            <a href="#api-keys" class="settings-nav-item">
+                <i class="fas fa-key"></i>
+                <span>API Keys</span>
+            </a>
+            <a href="#notifications" class="settings-nav-item">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+            </a>
+            <a href="#shortcuts" class="settings-nav-item">
+                <i class="fas fa-keyboard"></i>
+                <span>Shortcuts</span>
+            </a>
+            <a href="#storage" class="settings-nav-item">
+                <i class="fas fa-database"></i>
+                <span>Storage</span>
+            </a>
+            <a href="#danger" class="settings-nav-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Danger Zone</span>
+            </a>
+        </nav>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <!-- General Settings -->
+            <section id="general" class="settings-section">
+                <h2 class="section-title">General Settings</h2>
+                <p class="section-description">Basic preferences for the application</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Theme</div>
+                        <div class="setting-description">Choose your preferred color theme</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="theme-options">
+                            <div class="theme-option light active" onclick="setTheme('light')">
+                                <div class="theme-preview">
+                                    <div class="theme-preview-sidebar"></div>
+                                    <div class="theme-preview-content"></div>
+                                </div>
+                                <div class="theme-label">Light</div>
+                            </div>
+                            <div class="theme-option dark" onclick="setTheme('dark')">
+                                <div class="theme-preview">
+                                    <div class="theme-preview-sidebar"></div>
+                                    <div class="theme-preview-content"></div>
+                                </div>
+                                <div class="theme-label">Dark</div>
+                            </div>
+                            <div class="theme-option system" onclick="setTheme('system')">
+                                <div class="theme-preview"></div>
+                                <div class="theme-label">System</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Language</div>
+                        <div class="setting-description">Interface language</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="language">
+                            <option value="en-US" selected>English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-save Drafts</div>
+                        <div class="setting-description">Automatically save form data as you type</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Show Tooltips</div>
+                        <div class="setting-description">Display helpful tips throughout the interface</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generation Settings -->
+            <section id="generation" class="settings-section">
+                <h2 class="section-title">Generation Defaults</h2>
+                <p class="section-description">Default settings for new episode generations</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Default Episode Duration</div>
+                        <div class="setting-description">Target length for generated episodes</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="range-container">
+                            <input type="range" class="range-slider" min="5" max="60" value="15" id="duration-slider" oninput="updateDuration(this.value)">
+                            <span class="range-value" id="duration-value">15 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Default Topic Count</div>
+                        <div class="setting-description">Number of topics to cover per episode</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="range-container">
+                            <input type="range" class="range-slider" min="1" max="10" value="5" id="topics-slider" oninput="updateTopics(this.value)">
+                            <span class="range-value" id="topics-value">5 topics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Research Depth</div>
+                        <div class="setting-description">How deep to research content sources</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="research_depth">
+                            <option value="quick">Quick (Faster)</option>
+                            <option value="standard" selected>Standard</option>
+                            <option value="deep">Deep (More thorough)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">AI Model</div>
+                        <div class="setting-description">Which AI model to use for content generation</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="ai_model">
+                            <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (Fast)</option>
+                            <option value="gemini-2.0-pro">Gemini 2.0 Pro (Quality)</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Balanced)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-generate Newsletter</div>
+                        <div class="setting-description">Create a newsletter with each episode</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Script Review</div>
+                        <div class="setting-description">Review and edit script before audio generation</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Settings -->
+            <section id="audio" class="settings-section">
+                <h2 class="section-title">Audio Settings</h2>
+                <p class="section-description">Configure audio output quality and playback</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Audio Quality</div>
+                        <div class="setting-description">Higher quality = larger file size</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="audio_quality">
+                            <option value="standard">Standard (128 kbps)</option>
+                            <option value="high" selected>High (192 kbps)</option>
+                            <option value="premium">Premium (320 kbps)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Default TTS Provider</div>
+                        <div class="setting-description">Text-to-speech service for audio generation</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="tts_provider">
+                            <option value="elevenlabs" selected>ElevenLabs (Natural)</option>
+                            <option value="google">Google Cloud TTS</option>
+                            <option value="openai">OpenAI TTS</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Speaking Speed</div>
+                        <div class="setting-description">Default playback speed for audio</div>
+                    </div>
+                    <div class="setting-control">
+                        <select class="setting-select" name="speaking_speed">
+                            <option value="0.75">0.75x (Slower)</option>
+                            <option value="1.0" selected>1.0x (Normal)</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2.0">2.0x (Faster)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Add Background Music</div>
+                        <div class="setting-description">Include subtle background music in episodes</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-play Next Episode</div>
+                        <div class="setting-description">Automatically play the next episode when one finishes</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Keys -->
+            <section id="api-keys" class="settings-section">
+                <h2 class="section-title">API Keys</h2>
+                <p class="section-description">Configure your AI service credentials</p>
+
+                <div class="api-key-item">
+                    <div class="api-key-icon gemini">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="api-key-info">
+                        <div class="api-key-name">Google Gemini</div>
+                        <div class="api-key-status configured">
+                            <i class="fas fa-check-circle"></i> Configured
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="editApiKey('gemini')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+
+                <div class="api-key-item">
+                    <div class="api-key-icon elevenlabs">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <div class="api-key-info">
+                        <div class="api-key-name">ElevenLabs</div>
+                        <div class="api-key-status configured">
+                            <i class="fas fa-check-circle"></i> Configured
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="editApiKey('elevenlabs')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+
+                <div class="api-key-item">
+                    <div class="api-key-icon openai">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="api-key-info">
+                        <div class="api-key-name">OpenAI (Optional)</div>
+                        <div class="api-key-status missing">
+                            <i class="fas fa-exclamation-circle"></i> Not configured
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="editApiKey('openai')">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+
+                <div style="margin-top: var(--space-lg);">
+                    <a href="https://aistudio.google.com/apikey" target="_blank" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-external-link-alt"></i> Get Gemini API Key
+                    </a>
+                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-external-link-alt"></i> Get ElevenLabs API Key
+                    </a>
+                </div>
+            </section>
+
+            <!-- Notifications -->
+            <section id="notifications" class="settings-section">
+                <h2 class="section-title">Notifications</h2>
+                <p class="section-description">Control how you receive updates</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Generation Complete</div>
+                        <div class="setting-description">Notify when an episode finishes generating</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Generation Failed</div>
+                        <div class="setting-description">Notify when a generation fails</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Browser Notifications</div>
+                        <div class="setting-description">Show desktop notifications</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-secondary btn-sm" onclick="requestNotificationPermission()">
+                            <i class="fas fa-bell"></i> Enable
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Sound Effects</div>
+                        <div class="setting-description">Play sounds for notifications</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Keyboard Shortcuts -->
+            <section id="shortcuts" class="settings-section">
+                <h2 class="section-title">Keyboard Shortcuts</h2>
+                <p class="section-description">Quick access to common actions</p>
+
+                <div class="shortcut-grid">
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Play/Pause</span>
+                        <div class="shortcut-keys">
+                            <span class="key">Space</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Skip Forward 15s</span>
+                        <div class="shortcut-keys">
+                            <span class="key">→</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Skip Back 15s</span>
+                        <div class="shortcut-keys">
+                            <span class="key">←</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Volume Up</span>
+                        <div class="shortcut-keys">
+                            <span class="key">↑</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Volume Down</span>
+                        <div class="shortcut-keys">
+                            <span class="key">↓</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Mute/Unmute</span>
+                        <div class="shortcut-keys">
+                            <span class="key">M</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Go to Dashboard</span>
+                        <div class="shortcut-keys">
+                            <span class="key">G</span>
+                            <span class="key">D</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">New Podcast</span>
+                        <div class="shortcut-keys">
+                            <span class="key">N</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Search</span>
+                        <div class="shortcut-keys">
+                            <span class="key">⌘</span>
+                            <span class="key">K</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-action">Settings</span>
+                        <div class="shortcut-keys">
+                            <span class="key">⌘</span>
+                            <span class="key">,</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: var(--space-lg);">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Enable Keyboard Shortcuts</div>
+                            <div class="setting-description">Use keyboard for quick navigation</div>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Storage -->
+            <section id="storage" class="settings-section">
+                <h2 class="section-title">Storage & Data</h2>
+                <p class="section-description">Manage your local storage and data</p>
+
+                <div style="margin-bottom: var(--space-lg);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+                        <span class="setting-label">Storage Used</span>
+                        <span class="text-secondary">2.4 GB of 10 GB</span>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-fill" style="width: 24%;"></div>
+                    </div>
+                    <div class="storage-info">
+                        <span>Audio files: 1.8 GB</span>
+                        <span>Transcripts: 0.4 GB</span>
+                        <span>Other: 0.2 GB</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-delete Old Episodes</div>
+                        <div class="setting-description">Remove episodes older than 90 days</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Clear Cache</div>
+                        <div class="setting-description">Remove temporary files to free up space</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-secondary btn-sm" onclick="clearCache()">
+                            <i class="fas fa-broom"></i> Clear (45 MB)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Export All Data</div>
+                        <div class="setting-description">Download all your podcasts, episodes, and settings</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-secondary btn-sm" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Danger Zone -->
+            <section id="danger" class="settings-section">
+                <div class="danger-zone">
+                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h2>
+                    <p class="section-description">Irreversible actions - proceed with caution</p>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Delete All Episodes</div>
+                            <div class="setting-description">Permanently remove all generated episodes</div>
+                        </div>
+                        <div class="setting-control">
+                            <button class="btn btn-error btn-sm" onclick="deleteAllEpisodes()">
+                                <i class="fas fa-trash"></i> Delete All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Reset All Settings</div>
+                            <div class="setting-description">Restore all settings to default values</div>
+                        </div>
+                        <div class="setting-control">
+                            <button class="btn btn-error btn-sm" onclick="resetSettings()">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item" style="border-bottom: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Delete Account & All Data</div>
+                            <div class="setting-description">Permanently delete everything including podcasts</div>
+                        </div>
+                        <div class="setting-control">
+                            <button class="btn btn-error btn-sm" onclick="deleteAccount()">
+                                <i class="fas fa-user-slash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Settings state
+    let currentSettings = {};
+    let saveTimeout = null;
+
+    // Load settings on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadSettings();
+        await loadStorageInfo();
+    });
+
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/settings');
+            if (response.ok) {
+                currentSettings = await response.json();
+                applySettingsToUI(currentSettings);
+            }
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+        }
+    }
+
+    function applySettingsToUI(settings) {
+        // Theme
+        document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+        const themeEl = document.querySelector(`.theme-option.${settings.theme || 'system'}`);
+        if (themeEl) themeEl.classList.add('active');
+
+        // Duration slider
+        const durationSlider = document.getElementById('duration-slider');
+        if (durationSlider) {
+            durationSlider.value = settings.default_duration || 15;
+            updateDuration(settings.default_duration || 15);
+        }
+
+        // Topics slider
+        const topicsSlider = document.getElementById('topics-slider');
+        if (topicsSlider) {
+            topicsSlider.value = settings.default_topics || 3;
+            updateTopics(settings.default_topics || 3);
+        }
+
+        // Selects
+        const selects = {
+            'language': settings.language || 'en-US',
+            'research_depth': settings.research_depth || 'standard',
+            'ai_model': settings.ai_model || 'gemini-2.0-flash',
+            'audio_quality': settings.audio_quality || 'high',
+            'tts_provider': settings.tts_provider || 'elevenlabs',
+            'speaking_speed': String(settings.playback_speed || 1.0)
+        };
+
+        Object.entries(selects).forEach(([name, value]) => {
+            const select = document.querySelector(`select[name="${name}"]`);
+            if (select) select.value = value;
+        });
+    }
+
+    async function saveSettings(newSettings) {
+        Object.assign(currentSettings, newSettings);
+
+        // Debounce saves
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentSettings)
+                });
+                if (response.ok) {
+                    showToast('success', 'Settings Saved', 'Your preferences have been updated');
+                }
+            } catch (error) {
+                showToast('error', 'Save Failed', 'Could not save settings');
+            }
+        }, 500);
+    }
+
+    // Navigation highlighting
+    const navItems = document.querySelectorAll('.settings-nav-item');
+    const sections = document.querySelectorAll('.settings-section');
+
+    function updateActiveNav() {
+        const scrollPos = window.scrollY + 100;
+
+        sections.forEach((section, index) => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+
+            if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                navItems.forEach(item => item.classList.remove('active'));
+                if (navItems[index]) navItems[index].classList.add('active');
+            }
+        });
+    }
+
+    window.addEventListener('scroll', updateActiveNav);
+
+    // Smooth scroll
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(item.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Range slider updates
+    function updateDuration(value) {
+        document.getElementById('duration-value').textContent = value + ' min';
+        saveSettings({ default_duration: parseInt(value) });
+    }
+
+    function updateTopics(value) {
+        document.getElementById('topics-value').textContent = value + ' topics';
+        saveSettings({ default_topics: parseInt(value) });
+    }
+
+    // Select change handlers
+    document.querySelectorAll('.setting-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const name = e.target.name;
+            const value = e.target.value;
+            saveSettings({ [name]: value });
+        });
+    });
+
+    // Toggle switch handlers
+    document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+        toggle.addEventListener('change', (e) => {
+            const label = e.target.closest('.setting-item')?.querySelector('.setting-label')?.textContent;
+            // Map label to setting key
+            const keyMap = {
+                'Auto-save Drafts': 'auto_save',
+                'Show Tooltips': 'show_tooltips',
+                'Auto-generate Newsletter': 'auto_newsletter',
+                'Script Review': 'script_review',
+                'Add Background Music': 'enable_background_music',
+                'Auto-play Next Episode': 'autoplay_next',
+                'Generation Complete': 'notify_complete',
+                'Generation Failed': 'notify_failed',
+                'Sound Effects': 'sound_effects',
+                'Enable Keyboard Shortcuts': 'keyboard_shortcuts',
+                'Auto-delete Old Episodes': 'auto_delete_old'
+            };
+            const key = keyMap[label];
+            if (key) saveSettings({ [key]: e.target.checked });
+        });
+    });
+
+    // Theme selection
+    function setTheme(theme) {
+        document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+        document.querySelector(`.theme-option.${theme}`).classList.add('active');
+        localStorage.setItem('theme', theme);
+        saveSettings({ theme });
+        showToast('success', 'Theme Updated', `Switched to ${theme} theme`);
+    }
+
+    // API Key editing
+    function editApiKey(service) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">Configure ${service.charAt(0).toUpperCase() + service.slice(1)} API Key</h3>
+                    <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">API Key</label>
+                        <input type="password" class="form-input" placeholder="Enter your API key..." id="api-key-input">
+                        <p class="form-help">Your API key is stored securely in your .env file.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveApiKey('${service}')">Save Key</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        document.getElementById('api-key-input').focus();
+    }
+
+    async function saveApiKey(service) {
+        const key = document.getElementById('api-key-input').value;
+        if (!key) {
+            showToast('error', 'Error', 'Please enter an API key');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/settings/api-keys', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key_name: service, key_value: key })
+            });
+
+            if (response.ok) {
+                showToast('success', 'API Key Saved', `${service} API key has been updated`);
+                document.querySelector('.modal-overlay').remove();
+                // Update status display
+                const item = document.querySelector(`.api-key-icon.${service}`).closest('.api-key-item');
+                const status = item.querySelector('.api-key-status');
+                status.className = 'api-key-status configured';
+                status.innerHTML = '<i class="fas fa-check-circle"></i> Configured';
+            } else {
+                const error = await response.json();
+                showToast('error', 'Error', error.error || 'Failed to save API key');
+            }
+        } catch (error) {
+            showToast('error', 'Error', 'Failed to save API key');
+        }
+    }
+
+    // Load storage info
+    async function loadStorageInfo() {
+        try {
+            const response = await fetch('/api/settings/storage');
+            if (response.ok) {
+                const storage = await response.json();
+                updateStorageUI(storage);
+            }
+        } catch (error) {
+            console.error('Failed to load storage info:', error);
+        }
+    }
+
+    function updateStorageUI(storage) {
+        // Update storage bar and info
+        const usedPercent = Math.min((storage.total_size / (10 * 1024 * 1024 * 1024)) * 100, 100);
+        const storageFill = document.querySelector('.storage-fill');
+        if (storageFill) storageFill.style.width = usedPercent + '%';
+
+        // Update text
+        const storageUsed = document.querySelector('.setting-label + .text-secondary');
+        if (storageUsed) {
+            storageUsed.textContent = `${storage.total_size_formatted} used`;
+        }
+
+        // Update cache button text
+        const cacheBtn = document.querySelector('button[onclick="clearCache()"]');
+        if (cacheBtn) {
+            cacheBtn.innerHTML = `<i class="fas fa-broom"></i> Clear (${storage.cache_size_formatted})`;
+        }
+    }
+
+    // Notification permission
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showToast('success', 'Notifications Enabled', 'You will receive desktop notifications');
+                    // Show a test notification
+                    new Notification('Podcast Studio', {
+                        body: 'Notifications are now enabled!',
+                        icon: '/static/icon.png'
+                    });
+                }
+            });
+        } else {
+            showToast('warning', 'Not Supported', 'Your browser does not support notifications');
+        }
+    }
+
+    // Storage actions
+    async function clearCache() {
+        const confirmed = await showConfirm({
+            type: 'warning',
+            title: 'Clear Cache?',
+            message: 'This will remove all temporary files.',
+            confirmText: 'Clear'
+        });
+
+        if (confirmed) {
+            try {
+                const response = await fetch('/api/settings/clear-cache', { method: 'POST' });
+                if (response.ok) {
+                    showToast('success', 'Cache Cleared', 'Temporary files have been removed');
+                    loadStorageInfo(); // Refresh storage display
+                }
+            } catch (error) {
+                showToast('error', 'Error', 'Failed to clear cache');
+            }
+        }
+    }
+
+    function exportData() {
+        showToast('info', 'Exporting Data', 'Preparing your download...');
+        // TODO: Implement full data export
+        setTimeout(() => {
+            showToast('warning', 'Coming Soon', 'Data export feature is in development');
+        }, 1000);
+    }
+
+    // Danger zone actions
+    async function deleteAllEpisodes() {
+        const confirmed = await showConfirm({
+            type: 'error',
+            title: 'Delete All Episodes?',
+            message: 'This will permanently delete all episodes and audio files. This cannot be undone.',
+            confirmText: 'Delete All'
+        });
+
+        if (confirmed) {
+            showToast('info', 'Deleting Episodes', 'This may take a moment...');
+            // TODO: Implement API endpoint
+            setTimeout(() => {
+                showToast('warning', 'Coming Soon', 'Bulk delete feature is in development');
+            }, 1000);
+        }
+    }
+
+    async function resetSettings() {
+        const confirmed = await showConfirm({
+            type: 'warning',
+            title: 'Reset All Settings?',
+            message: 'All your preferences will be restored to defaults.',
+            confirmText: 'Reset'
+        });
+
+        if (confirmed) {
+            // Reset to defaults
+            const defaults = {
+                theme: 'system',
+                language: 'en-US',
+                auto_save: true,
+                default_duration: 15,
+                default_topics: 3,
+                research_depth: 'standard',
+                ai_model: 'gemini-2.0-flash',
+                audio_quality: 'high',
+                tts_provider: 'elevenlabs',
+                playback_speed: 1.0
+            };
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(defaults)
+                });
+
+                if (response.ok) {
+                    showToast('success', 'Settings Reset', 'All settings restored to defaults');
+                    location.reload();
+                }
+            } catch (error) {
+                showToast('error', 'Error', 'Failed to reset settings');
+            }
+        }
+    }
+
+    async function deleteAccount() {
+        const confirmed = await showConfirm({
+            type: 'error',
+            title: 'Delete Everything?',
+            message: 'This will permanently delete all podcasts, episodes, and settings. This action cannot be undone.',
+            confirmText: 'Delete Forever'
+        });
+
+        if (confirmed) {
+            const confirmText = prompt('Type "DELETE" to confirm:');
+            if (confirmText === 'DELETE') {
+                showToast('info', 'Deleting Account', 'Processing your request...');
+                // TODO: Implement API endpoint
+                setTimeout(() => {
+                    showToast('warning', 'Coming Soon', 'Account deletion feature is in development');
+                }, 1000);
+            }
+        }
+    }
+</script>
+{% endblock %}

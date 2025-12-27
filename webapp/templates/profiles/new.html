@@ -1,124 +1,270 @@
 {% extends "base.html" %}
 
-{% block title %}New Profile - Podcast Studio{% endblock %}
+{% block title %}Create Podcast{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-8">
-    <!-- Header -->
-    <div>
-        <div class="flex items-center space-x-3 mb-2">
-            <a href="/profiles" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h1 class="text-3xl font-bold text-gray-900">Create Podcast Profile</h1>
+<div class="page-header">
+    <h1 class="page-title">Create New Podcast</h1>
+    <p class="page-description">AI will help you set up everything</p>
+</div>
+
+<div class="page-content" style="max-width: 800px;">
+    <form id="wizardForm" method="POST" action="/profiles/new">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Step 1: Basic Info -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">What's your podcast about?</h2>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Podcast Idea</label>
+                <textarea id="ideaInput" class="form-textarea" rows="3" required
+                    placeholder="Describe your podcast... (e.g., Daily tech news for Indian professionals)"></textarea>
+                <div class="form-help">Be as specific as possible - AI will help refine this</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Target Audience (Optional)</label>
+                <input type="text" id="audienceInput" class="form-input"
+                    placeholder="e.g., Indian professionals in US, aged 25-40">
+            </div>
+
+            <div id="aiSuggestion"
+                style="display: none; padding: var(--space-lg); background: var(--accent-light); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+                <div style="display: flex; gap: var(--space-md); align-items: start;">
+                    <div style="font-size: 1.5rem;">✨</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: var(--space-sm);">AI Suggestion</div>
+                        <div id="aiText" style="color: var(--text-secondary);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="refineBtn" class="btn btn-secondary" onclick="getAISuggestion()">
+                <i class="fas fa-magic"></i>
+                Help me refine this
+            </button>
         </div>
-        <p class="text-gray-600">Configure a new podcast with its settings and workflow</p>
-    </div>
 
-    <!-- Form -->
-    <form method="POST" class="space-y-6">
-        <!-- Basic Info -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+        <!-- Step 2: Sources -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Content Sources</h2>
+            </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Name *</label>
-                    <input type="text" name="name" required placeholder="e.g., Desi Daily, Tech Talk Weekly"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+            <div id="sourcesLoading" style="text-align: center; padding: var(--space-xl); color: var(--text-tertiary);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: var(--space-md);"></i>
+                <div>AI is finding the best sources for you...</div>
+            </div>
+
+            <div id="sourcesContent" style="display: none;">
+                <div id="sourcesExplanation" style="margin-bottom: var(--space-lg); color: var(--text-secondary);">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea name="description" rows="3" placeholder="What is this podcast about?"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
-                    <textarea name="target_audience" rows="2" placeholder="Who is this podcast for?"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
-                </div>
+                <div id="sourcesList" style="display: grid; gap: var(--space-sm);"></div>
             </div>
         </div>
 
-        <!-- Content Settings -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Content Settings</h2>
+        <!-- Step 3: Settings -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Podcast Settings</h2>
+            </div>
 
-            <div class="grid grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tone</label>
-                    <select name="tone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
-                        <option value="conversational">Conversational</option>
-                        <option value="formal">Formal</option>
-                        <option value="casual">Casual</option>
-                        <option value="educational">Educational</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                    <select name="language" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
-                        <option value="en-US">English (US)</option>
-                        <option value="en-GB">English (UK)</option>
-                        <option value="hi-IN">Hindi</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Duration</label>
-                    <select name="duration" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Episode Duration</label>
+                    <select id="durationInput" class="form-select">
                         <option value="5">5 minutes</option>
                         <option value="10" selected>10 minutes</option>
                         <option value="15">15 minutes</option>
                         <option value="20">20 minutes</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Topics per Episode</label>
-                    <select name="topic_count" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-purple-500 focus:border-purple-500">
+
+                <div class="form-group">
+                    <label class="form-label">Topics per Episode</label>
+                    <select id="topicCountInput" class="form-select">
                         <option value="3">3 topics</option>
-                        <option value="4">4 topics</option>
                         <option value="5" selected>5 topics</option>
-                        <option value="6">6 topics</option>
                         <option value="7">7 topics</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <select id="toneInput" class="form-select">
+                        <option value="conversational" selected>Conversational</option>
+                        <option value="professional">Professional</option>
+                        <option value="casual">Casual</option>
+                        <option value="educational">Educational</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Language</label>
+                    <select id="languageInput" class="form-select">
+                        <option value="en-US" selected>English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="hi-IN">Hindi</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- Categories -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
-            <p class="text-sm text-gray-500 mb-4">Select the topics your podcast will cover</p>
+        <!-- Hidden Fields -->
+        <input type="hidden" name="name" id="hiddenName">
+        <input type="hidden" name="description" id="hiddenDescription">
+        <input type="hidden" name="target_audience" id="hiddenAudience">
+        <input type="hidden" name="sources" id="hiddenSources">
+        <input type="hidden" name="tone" id="hiddenTone">
+        <input type="hidden" name="duration" id="hiddenDuration">
+        <input type="hidden" name="language" id="hiddenLanguage">
+        <input type="hidden" name="topic_count" id="hiddenTopicCount">
+        <input type="hidden" name="categories" id="hiddenCategories" value="[]">
 
-            <div class="grid grid-cols-3 gap-3">
-                {% set categories = ['immigration', 'career', 'family', 'community', 'finance', 'tech', 'entertainment', 'health', 'education', 'politics', 'culture', 'travel'] %}
-                {% for cat in categories %}
-                <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <input type="checkbox" name="categories" value="{{ cat }}" class="h-4 w-4 text-purple-600 rounded focus:ring-purple-500">
-                    <span class="text-sm text-gray-700 capitalize">{{ cat }}</span>
-                </label>
-                {% endfor %}
-            </div>
-            <input type="hidden" name="categories" id="categories-json" value="[]">
-        </div>
-
-        <!-- Submit -->
-        <div class="flex justify-end space-x-4">
-            <a href="/profiles" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                Cancel
-            </a>
-            <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                Create Profile
+        <!-- Actions -->
+        <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+            <a href="/" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i>
+                Create Podcast
             </button>
         </div>
     </form>
 </div>
 
 <script>
-// Collect categories into JSON
-document.querySelector('form').addEventListener('submit', function(e) {
-    const checkboxes = document.querySelectorAll('input[name="categories"]:checked');
-    const categories = Array.from(checkboxes).map(cb => cb.value);
-    document.getElementById('categories-json').value = JSON.stringify(categories);
+const wizardData = {
+    sources: []
+};
+
+// Load sources on page load
+window.addEventListener('load', () => {
+    loadSources();
 });
+
+async function getAISuggestion() {
+    const btn = document.getElementById('refineBtn');
+    const idea = document.getElementById('ideaInput').value.trim();
+    
+    if (!idea) {
+        alert('Please describe your podcast idea first');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+    
+    try {
+        const response = await fetch('/api/ai-suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: `Refine this podcast idea and suggest a good name: "${idea}". Provide: 1) A catchy podcast name, 2) A better description, 3) Key value proposition. Be concise.`
+            })
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('aiSuggestion').style.display = 'block';
+        document.getElementById('aiText').innerHTML = data.suggestion.replace(/\n/g, '<br>');
+        
+    } catch (error) {
+        alert('AI suggestion failed. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-magic"></i> Help me refine this';
+    }
+}
+
+async function loadSources() {
+    // Wait for idea to be entered
+    const ideaInput = document.getElementById('ideaInput');
+    
+    ideaInput.addEventListener('blur', async() => {
+        const idea = ideaInput.value.trim();
+        if (!idea) return;
+        
+        try {
+            const response = await fetch('/api/suggest-sources', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idea: idea,
+                    audience: document.getElementById('audienceInput').value
+                })
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('sourcesLoading').style.display = 'none';
+            document.getElementById('sourcesContent').style.display = 'block';
+            document.getElementById('sourcesExplanation').textContent = data.explanation || 'Recommended sources:';
+            
+            const sourcesList = document.getElementById('sourcesList');
+            sourcesList.innerHTML = '';
+            
+            data.sources.forEach(source => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: var(--space-md); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s;';
+                div.innerHTML = `
+                    <label style="display: flex; align-items: start; gap: var(--space-md); cursor: pointer;">
+                        <input type="checkbox" checked value="${source.id}" onchange="toggleSource(this)" style="margin-top: 0.25rem;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; margin-bottom: var(--space-xs);">${source.name}</div>
+                            <div class="text-secondary text-sm">${source.description}</div>
+                        </div>
+                    </label>
+                `;
+                div.addEventListener('mouseenter', () => {
+                    div.style.borderColor = 'var(--accent)';
+                    div.style.background = 'var(--accent-light)';
+                });
+                div.addEventListener('mouseleave', () => {
+                    div.style.borderColor = 'var(--border-color)';
+                    div.style.background = '';
+                });
+                sourcesList.appendChild(div);
+            });
+            
+            wizardData.sources = data.sources.map(s => s.id);
+            
+        } catch (error) {
+            document.getElementById('sourcesLoading').innerHTML = '<div class="text-secondary">Using default sources</div>';
+        }
+    });
+}
+
+function toggleSource(checkbox) {
+    if (checkbox.checked) {
+        if (!wizardData.sources.includes(checkbox.value)) {
+            wizardData.sources.push(checkbox.value);
+        }
+    } else {
+        wizardData.sources = wizardData.sources.filter(s => s !== checkbox.value);
+    }
+}
+
+// Form submission
+document.getElementById('wizardForm').addEventListener('submit', (e) => {
+    const idea = document.getElementById('ideaInput').value.trim();
+    const name = generateName(idea);
+    
+    document.getElementById('hiddenName').value = name;
+    document.getElementById('hiddenDescription').value = idea;
+    document.getElementById('hiddenAudience').value = document.getElementById('audienceInput').value;
+    document.getElementById('hiddenSources').value = JSON.stringify(wizardData.sources);
+    document.getElementById('hiddenTone').value = document.getElementById('toneInput').value;
+    document.getElementById('hiddenDuration').value = document.getElementById('durationInput').value;
+    document.getElementById('hiddenLanguage').value = document.getElementById('languageInput').value;
+    document.getElementById('hiddenTopicCount').value = document.getElementById('topicCountInput').value;
+});
+
+function generateName(idea) {
+    const words = idea.split(' ').slice(0, 4);
+    return words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 </script>
 {% endblock %}

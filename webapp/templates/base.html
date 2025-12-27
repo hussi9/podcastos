@@ -1,159 +1,1715 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Podcast Studio{% endblock %}</title>
-    
-    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Libraries -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/wavesurfer.js@7"></script>
-
-    <!-- Custom Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        studio: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            800: '#1e293b',
-                            900: '#0f172a',
-                            accent: '#6366f1' // Indigo
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        :root {
+            /* Colors - Modern neutral palette */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f1f3f5;
+
+            --text-primary: #1a1a1a;
+            --text-secondary: #6c757d;
+            --text-tertiary: #868e96;
+
+            --border-color: #dee2e6;
+            --border-hover: #ced4da;
+
+            --accent: #0066ff;
+            --accent-hover: #0052cc;
+            --accent-light: #e6f0ff;
+
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --error: #ef4444;
+            --error-light: #fee2e2;
+
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+
+            /* Typography */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+            /* Borders */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+            /* Transitions */
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            padding: var(--space-lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+            transition: transform var(--transition-normal);
+        }
+
+        .sidebar-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: var(--space-sm) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-tertiary);
+            padding: var(--space-md) var(--space-md) var(--space-sm);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all var(--transition-fast);
+            min-height: 44px; /* Touch target */
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
         .nav-item.active {
-            background-color: #f1f5f9;
-            color: #4f46e5;
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 var(--space-lg);
+            align-items: center;
+            justify-content: space-between;
+            z-index: 99;
+        }
+
+        .mobile-logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .mobile-menu-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: background var(--transition-fast);
+        }
+
+        .mobile-menu-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--space-lg) var(--space-2xl);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+            line-height: 1.3;
+        }
+
+        .page-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            font-size: 0.85rem;
+        }
+
+        .breadcrumbs a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumbs .separator {
+            color: var(--text-tertiary);
+        }
+
+        .breadcrumbs .current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .page-content {
+            padding: var(--space-2xl);
+            max-width: 1200px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            transition: box-shadow var(--transition-fast);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
             font-weight: 600;
         }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: inherit;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-sm {
+            padding: var(--space-xs) var(--space-md);
+            font-size: 0.8rem;
+            min-height: 32px;
+        }
+
+        .btn-lg {
+            padding: var(--space-md) var(--space-xl);
+            font-size: 1rem;
+            min-height: 52px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border-color);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+        }
+
+        .btn-error {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-error:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .btn-icon {
+            width: 44px;
+            padding: 0;
+        }
+
+        /* Button Loading State */
+        .btn.loading {
+            pointer-events: none;
+            position: relative;
+            color: transparent;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .btn-primary.loading::after {
+            border-color: white;
+            border-right-color: transparent;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+
+        .form-label .required {
+            color: var(--error);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            min-height: 44px;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .form-input.error,
+        .form-textarea.error,
+        .form-select.error {
+            border-color: var(--error);
+        }
+
+        .form-input.error:focus,
+        .form-textarea.error:focus,
+        .form-select.error:focus {
+            box-shadow: 0 0 0 3px var(--error-light);
+        }
+
+        .form-input.success,
+        .form-textarea.success {
+            border-color: var(--success);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: var(--space-xs);
+        }
+
+        .form-error {
+            font-size: 0.8rem;
+            color: var(--error);
+            margin-top: var(--space-xs);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .form-error i {
+            font-size: 0.75rem;
+        }
+
+        /* Character Counter */
+        .char-counter {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-align: right;
+            margin-top: var(--space-xs);
+        }
+
+        .char-counter.warning {
+            color: var(--warning);
+        }
+
+        .char-counter.error {
+            color: var(--error);
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: var(--success-light);
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: var(--warning-light);
+            color: #92400e;
+        }
+
+        .badge-error {
+            background: var(--error-light);
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-2xl);
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.3;
+        }
+
+        .empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: var(--space-lg);
+            right: var(--space-lg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            max-width: 400px;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--text-secondary);
+            animation: slideIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast.info {
+            border-left-color: var(--accent);
+        }
+
+        .toast-icon {
+            font-size: 1.1rem;
+            margin-top: 2px;
+        }
+
+        .toast.success .toast-icon { color: var(--success); }
+        .toast.error .toast-icon { color: var(--error); }
+        .toast.warning .toast-icon { color: var(--warning); }
+        .toast.info .toast-icon { color: var(--accent); }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .toast-message {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: var(--space-xs);
+            font-size: 1rem;
+            line-height: 1;
+            transition: color var(--transition-fast);
+        }
+
+        .toast-close:hover {
+            color: var(--text-primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Flash Messages (Legacy - converts to toast) */
+        .flash-messages {
+            padding: 0 var(--space-2xl);
+            padding-top: var(--space-lg);
+        }
+
+        .flash {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            font-size: 0.9rem;
+        }
+
+        .flash.success {
+            background: var(--success-light);
+            color: #065f46;
+        }
+
+        .flash.error {
+            background: var(--error-light);
+            color: #991b1b;
+        }
+
+        .flash.warning {
+            background: var(--warning-light);
+            color: #92400e;
+        }
+
+        .flash.info {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar-fill.success {
+            background: var(--success);
+        }
+
+        .progress-bar-fill.error {
+            background: var(--error);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-md);
+        }
+
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .skeleton-title {
+            height: 1.5rem;
+            width: 60%;
+            margin-bottom: var(--space-md);
+        }
+
+        .skeleton-button {
+            height: 44px;
+            width: 120px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform var(--transition-normal);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: var(--space-lg);
+        }
+
+        .modal-footer {
+            padding: var(--space-lg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-md);
+        }
+
+        /* Confirm Dialog */
+        .confirm-dialog {
+            text-align: center;
+        }
+
+        .confirm-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-lg);
+            font-size: 1.5rem;
+        }
+
+        .confirm-icon.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .confirm-icon.error {
+            background: var(--error-light);
+            color: var(--error);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding-top: 60px;
+            }
+
+            .page-header {
+                padding: var(--space-lg);
+                position: static;
+            }
+
+            .page-title {
+                font-size: 1.25rem;
+            }
+
+            .page-content {
+                padding: var(--space-lg);
+            }
+
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .toast-container {
+                left: var(--space-md);
+                right: var(--space-md);
+                max-width: none;
+            }
+
+            .toast {
+                min-width: auto;
+            }
+
+            .btn-group-mobile {
+                flex-direction: column;
+            }
+
+            .btn-group-mobile .btn {
+                width: 100%;
+            }
+        }
+
+        /* Utilities */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-sm { margin-bottom: var(--space-sm); }
+        .mb-md { margin-bottom: var(--space-md); }
+        .mb-lg { margin-bottom: var(--space-lg); }
+        .mb-xl { margin-bottom: var(--space-xl); }
+
+        .mt-0 { margin-top: 0; }
+        .mt-sm { margin-top: var(--space-sm); }
+        .mt-md { margin-top: var(--space-md); }
+        .mt-lg { margin-top: var(--space-lg); }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-secondary { color: var(--text-secondary); }
+        .text-tertiary { color: var(--text-tertiary); }
+        .text-success { color: var(--success); }
+        .text-error { color: var(--error); }
+        .text-sm { font-size: 0.85rem; }
+        .text-xs { font-size: 0.75rem; }
+
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .justify-end { justify-content: flex-end; }
+
+        .gap-xs { gap: var(--space-xs); }
+        .gap-sm { gap: var(--space-sm); }
+        .gap-md { gap: var(--space-md); }
+        .gap-lg { gap: var(--space-lg); }
+
+        .w-full { width: 100%; }
+        .hidden { display: none; }
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ARIA Live Region for Screen Readers */
+        [aria-live="polite"] {
+            position: absolute;
+            left: -10000px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-900 h-screen flex overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-full z-10">
-        <!-- Logo -->
-        <div class="h-16 flex items-center px-6 border-b border-slate-100">
-            <i class="fas fa-podcast text-indigo-600 text-2xl mr-3"></i>
-            <span class="text-lg font-bold tracking-tight text-slate-800">Podcast Studio</span>
-        </div>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container" role="alert" aria-live="polite"></div>
 
-        <!-- Scrollable Nav -->
-        <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-            <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Main</p>
-            
-            <a href="/" class="nav-item flex items-center px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors group">
-                <i class="fas fa-home w-6 text-center mr-2 text-slate-400 group-hover:text-indigo-500"></i>
-                Dashboard
-            </a>
-            
-            <a href="/profiles" class="nav-item flex items-center px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors group">
-                <i class="fas fa-microphone-alt w-6 text-center mr-2 text-slate-400 group-hover:text-indigo-500"></i>
-                Profiles
-            </a>
-            
-            <a href="/episodes" class="nav-item flex items-center px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors group">
-                <i class="fas fa-layer-group w-6 text-center mr-2 text-slate-400 group-hover:text-indigo-500"></i>
-                Episodes
-            </a>
+    <!-- ARIA Live Region for Status Updates -->
+    <div aria-live="polite" aria-atomic="true" id="status-announcer" class="sr-only"></div>
 
-            <div class="my-6 border-t border-slate-100"></div>
-
-            <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Configuration</p>
-            
-            <a href="#" class="nav-item flex items-center px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors group">
-                <i class="fas fa-cog w-6 text-center mr-2 text-slate-400 group-hover:text-indigo-500"></i>
-                Settings
-                <span class="ml-auto text-xs bg-slate-100 text-slate-500 py-0.5 px-2 rounded-full">v3.0</span>
-            </a>
-        </nav>
-
-        <!-- User/Footer -->
-        <div class="p-4 border-t border-slate-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
-                    A
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-slate-700">Admin User</p>
-                    <p class="text-xs text-slate-400">Local Environment</p>
-                </div>
+    <div class="app-container">
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <div class="mobile-logo">
+                <span>🎙️</span>
+                <span>Podcast Studio</span>
             </div>
-        </div>
-    </aside>
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
-        
-        <!-- Top Bar (Mobile menu trigger could go here) -->
-        <!-- Flash Messages -->
-        <div class="absolute top-4 right-4 z-50 w-96 space-y-2 pointer-events-none">
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-logo">
+                <span>🎙️</span>
+                <span>Podcast Studio</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}" {% if request.path == '/' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/profiles" class="nav-item {% if '/profiles' in request.path %}active{% endif %}" {% if '/profiles' in request.path %}aria-current="page"{% endif %}>
+                    <i class="fas fa-podcast"></i>
+                    <span>Podcasts</span>
+                </a>
+                <a href="/episodes" class="nav-item {% if '/episodes' in request.path and '/profiles' not in request.path %}active{% endif %}">
+                    <i class="fas fa-microphone"></i>
+                    <span>Episodes</span>
+                </a>
+
+                <div class="nav-section-title" style="margin-top: var(--space-md);">Content</div>
+                <a href="/newsletters" class="nav-item {% if '/newsletters' in request.path %}active{% endif %}">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Newsletters</span>
+                </a>
+                <a href="/jobs" class="nav-item {% if '/jobs' in request.path %}active{% endif %}">
+                    <i class="fas fa-tasks"></i>
+                    <span>Jobs</span>
+                </a>
+            </nav>
+
+            <div style="margin-top: auto;">
+                <a href="/settings" class="nav-item {% if '/settings' in request.path %}active{% endif %}">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" role="main">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
+                <div class="flash-messages">
                     {% for category, message in messages %}
-                        <div class="pointer-events-auto p-4 rounded-lg shadow-lg border-l-4 transform transition-all duration-300 animate-in fade-in slide-in-from-top-4
-                            {% if category == 'error' %}bg-white border-red-500 text-slate-800{% else %}bg-white border-green-500 text-slate-800{% endif %}">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center">
-                                    {% if category == 'error' %}
-                                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
-                                    {% else %}
-                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                    {% endif %}
-                                    <p class="text-sm font-medium">{{ message }}</p>
-                                </div>
-                                <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="flash {{ category }}" role="alert">
+                        {% if category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% elif category == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
                     {% endfor %}
+                </div>
                 {% endif %}
             {% endwith %}
-        </div>
 
-        <!-- Content Srcoller -->
-        <main class="flex-1 overflow-y-auto bg-slate-50 p-8">
-            <div class="max-w-6xl mx-auto">
-                {% block content %}{% endblock %}
-            </div>
+            {% block content %}{% endblock %}
         </main>
     </div>
 
-    <!-- Active Link Handler -->
+    <!-- Global JavaScript -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-item').forEach(link => {
-                if(link.getAttribute('href') === currentPath || (link.getAttribute('href') !== '/' && currentPath.startsWith(link.getAttribute('href')))) {
-                    link.classList.add('active');
-                }
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        function openMobileMenu() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('active');
+            mobileMenuBtn.setAttribute('aria-expanded', 'true');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            document.body.style.overflow = '';
+        }
+
+        mobileMenuBtn.addEventListener('click', () => {
+            if (sidebar.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        });
+
+        sidebarOverlay.addEventListener('click', closeMobileMenu);
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeMobileMenu();
+            }
+        });
+
+        // Toast Notification System
+        const toastContainer = document.getElementById('toast-container');
+
+        function showToast(type, title, message, duration = 5000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    ${message ? `<div class="toast-message">${message}</div>` : ''}
+                </div>
+                <button class="toast-close" aria-label="Close notification">&times;</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Announce to screen readers
+            const announcer = document.getElementById('status-announcer');
+            announcer.textContent = `${type}: ${title}. ${message || ''}`;
+
+            // Close button
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                removeToast(toast);
             });
+
+            // Auto remove
+            if (duration > 0) {
+                setTimeout(() => removeToast(toast), duration);
+            }
+
+            return toast;
+        }
+
+        function removeToast(toast) {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        // Expose globally
+        window.showToast = showToast;
+
+        // Form Validation Helpers
+        function validateField(input, rules) {
+            const value = input.value.trim();
+            let isValid = true;
+            let errorMessage = '';
+
+            if (rules.required && !value) {
+                isValid = false;
+                errorMessage = 'This field is required';
+            } else if (rules.minLength && value.length < rules.minLength) {
+                isValid = false;
+                errorMessage = `Minimum ${rules.minLength} characters required`;
+            } else if (rules.maxLength && value.length > rules.maxLength) {
+                isValid = false;
+                errorMessage = `Maximum ${rules.maxLength} characters allowed`;
+            } else if (rules.pattern && !rules.pattern.test(value)) {
+                isValid = false;
+                errorMessage = rules.patternMessage || 'Invalid format';
+            }
+
+            // Update UI
+            input.classList.toggle('error', !isValid);
+            input.classList.toggle('success', isValid && value);
+
+            // Update error message
+            let errorEl = input.parentElement.querySelector('.form-error');
+            if (!isValid) {
+                if (!errorEl) {
+                    errorEl = document.createElement('div');
+                    errorEl.className = 'form-error';
+                    input.parentElement.appendChild(errorEl);
+                }
+                errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${errorMessage}`;
+            } else if (errorEl) {
+                errorEl.remove();
+            }
+
+            return isValid;
+        }
+
+        // Character Counter
+        function initCharCounter(input, maxLength) {
+            const counter = document.createElement('div');
+            counter.className = 'char-counter';
+            input.parentElement.appendChild(counter);
+
+            function updateCounter() {
+                const remaining = maxLength - input.value.length;
+                counter.textContent = `${input.value.length}/${maxLength}`;
+                counter.classList.toggle('warning', remaining < maxLength * 0.2 && remaining > 0);
+                counter.classList.toggle('error', remaining <= 0);
+            }
+
+            input.addEventListener('input', updateCounter);
+            updateCounter();
+        }
+
+        // Expose helpers globally
+        window.validateField = validateField;
+        window.initCharCounter = initCharCounter;
+
+        // Confirmation Dialog
+        function showConfirm(options) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay active';
+                overlay.innerHTML = `
+                    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+                        <div class="modal-body">
+                            <div class="confirm-dialog">
+                                <div class="confirm-icon ${options.type || 'warning'}">
+                                    <i class="fas ${options.type === 'error' ? 'fa-trash' : 'fa-exclamation-triangle'}"></i>
+                                </div>
+                                <h3 id="confirm-title" style="margin-bottom: var(--space-sm);">${options.title}</h3>
+                                <p class="text-secondary">${options.message}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="justify-content: center;">
+                            <button class="btn btn-secondary" data-action="cancel">${options.cancelText || 'Cancel'}</button>
+                            <button class="btn ${options.type === 'error' ? 'btn-error' : 'btn-primary'}" data-action="confirm">${options.confirmText || 'Confirm'}</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+                    overlay.remove();
+                    resolve(false);
+                });
+
+                overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+                    overlay.remove();
+                    resolve(true);
+                });
+
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                        resolve(false);
+                    }
+                });
+
+                // Focus trap
+                overlay.querySelector('[data-action="cancel"]').focus();
+            });
+        }
+
+        window.showConfirm = showConfirm;
+
+        // Auto-convert flash messages to toasts
+        document.querySelectorAll('.flash').forEach(flash => {
+            const category = flash.classList.contains('success') ? 'success' :
+                            flash.classList.contains('error') ? 'error' :
+                            flash.classList.contains('warning') ? 'warning' : 'info';
+            const message = flash.textContent.trim();
+            showToast(category, category.charAt(0).toUpperCase() + category.slice(1), message);
+        });
+
+        // ============================================================
+        // GLOBAL KEYBOARD SHORTCUTS & COMMAND PALETTE
+        // ============================================================
+
+        // Command palette actions
+        const commandPaletteActions = [
+            { id: 'home', label: 'Go to Dashboard', icon: 'fa-home', shortcut: 'G D', action: () => window.location.href = '/' },
+            { id: 'podcasts', label: 'Go to Podcasts', icon: 'fa-podcast', shortcut: 'G P', action: () => window.location.href = '/profiles' },
+            { id: 'episodes', label: 'Go to Episodes', icon: 'fa-microphone', shortcut: 'G E', action: () => window.location.href = '/episodes' },
+            { id: 'newsletters', label: 'Go to Newsletters', icon: 'fa-newspaper', shortcut: 'G N', action: () => window.location.href = '/newsletters' },
+            { id: 'jobs', label: 'Go to Jobs', icon: 'fa-tasks', shortcut: 'G J', action: () => window.location.href = '/jobs' },
+            { id: 'settings', label: 'Open Settings', icon: 'fa-cog', shortcut: '⌘ ,', action: () => window.location.href = '/settings' },
+            { id: 'new-podcast', label: 'Create New Podcast', icon: 'fa-plus', shortcut: 'N P', action: () => window.location.href = '/profiles/new' },
+            { id: 'help', label: 'Show Keyboard Shortcuts', icon: 'fa-keyboard', shortcut: '?', action: () => showKeyboardHelp() },
+        ];
+
+        // Create Command Palette HTML
+        function createCommandPalette() {
+            const palette = document.createElement('div');
+            palette.id = 'command-palette';
+            palette.className = 'command-palette';
+            palette.innerHTML = `
+                <div class="command-palette-backdrop"></div>
+                <div class="command-palette-dialog">
+                    <div class="command-palette-header">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="command-search" placeholder="Search commands..." autocomplete="off">
+                        <span class="command-palette-hint">ESC to close</span>
+                    </div>
+                    <div class="command-palette-results" id="command-results"></div>
+                </div>
+            `;
+            document.body.appendChild(palette);
+
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .command-palette {
+                    display: none;
+                    position: fixed;
+                    inset: 0;
+                    z-index: 1000;
+                    align-items: flex-start;
+                    justify-content: center;
+                    padding-top: 15vh;
+                }
+                .command-palette.active { display: flex; }
+                .command-palette-backdrop {
+                    position: absolute;
+                    inset: 0;
+                    background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(4px);
+                }
+                .command-palette-dialog {
+                    position: relative;
+                    width: 100%;
+                    max-width: 560px;
+                    background: var(--bg-primary);
+                    border-radius: var(--radius-lg);
+                    box-shadow: var(--shadow-xl);
+                    overflow: hidden;
+                    margin: 0 var(--space-md);
+                }
+                .command-palette-header {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-md);
+                    padding: var(--space-md) var(--space-lg);
+                    border-bottom: 1px solid var(--border-color);
+                }
+                .command-palette-header i { color: var(--text-secondary); }
+                .command-palette-header input {
+                    flex: 1;
+                    border: none;
+                    background: none;
+                    font-size: 1rem;
+                    outline: none;
+                }
+                .command-palette-hint {
+                    font-size: 0.75rem;
+                    color: var(--text-tertiary);
+                    padding: var(--space-xs) var(--space-sm);
+                    background: var(--bg-tertiary);
+                    border-radius: var(--radius-sm);
+                }
+                .command-palette-results {
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+                .command-item {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-md);
+                    padding: var(--space-md) var(--space-lg);
+                    cursor: pointer;
+                    transition: background var(--transition-fast);
+                }
+                .command-item:hover, .command-item.selected {
+                    background: var(--bg-secondary);
+                }
+                .command-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: var(--radius-sm);
+                    background: var(--bg-tertiary);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--text-secondary);
+                }
+                .command-item.selected .command-icon {
+                    background: var(--accent);
+                    color: white;
+                }
+                .command-label { flex: 1; font-weight: 500; }
+                .command-shortcut {
+                    font-size: 0.75rem;
+                    color: var(--text-tertiary);
+                    display: flex;
+                    gap: var(--space-xs);
+                }
+                .command-shortcut span {
+                    padding: 2px 6px;
+                    background: var(--bg-tertiary);
+                    border-radius: var(--radius-sm);
+                    font-family: monospace;
+                }
+                .keyboard-help-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: var(--space-md);
+                    padding: var(--space-lg);
+                }
+                @media (max-width: 640px) {
+                    .keyboard-help-grid { grid-template-columns: 1fr; }
+                }
+                .shortcut-category {
+                    font-weight: 600;
+                    margin-bottom: var(--space-sm);
+                    color: var(--text-secondary);
+                    font-size: 0.85rem;
+                }
+                .shortcut-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: var(--space-sm) 0;
+                }
+                .shortcut-keys span {
+                    padding: 2px 6px;
+                    background: var(--bg-tertiary);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--radius-sm);
+                    font-size: 0.75rem;
+                    font-family: monospace;
+                    margin-left: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+
+            return palette;
+        }
+
+        // Initialize command palette
+        const commandPalette = createCommandPalette();
+        const commandSearch = document.getElementById('command-search');
+        const commandResults = document.getElementById('command-results');
+        let selectedIndex = 0;
+        let filteredActions = [...commandPaletteActions];
+
+        function renderCommands(actions) {
+            filteredActions = actions;
+            selectedIndex = 0;
+            commandResults.innerHTML = actions.map((action, index) => `
+                <div class="command-item ${index === 0 ? 'selected' : ''}" data-index="${index}">
+                    <div class="command-icon"><i class="fas ${action.icon}"></i></div>
+                    <span class="command-label">${action.label}</span>
+                    <div class="command-shortcut">
+                        ${action.shortcut.split(' ').map(k => `<span>${k}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Click handlers
+            commandResults.querySelectorAll('.command-item').forEach((item, idx) => {
+                item.addEventListener('click', () => executeCommand(idx));
+            });
+        }
+
+        function filterCommands(query) {
+            const q = query.toLowerCase();
+            const filtered = commandPaletteActions.filter(action =>
+                action.label.toLowerCase().includes(q) ||
+                action.shortcut.toLowerCase().includes(q)
+            );
+            renderCommands(filtered);
+        }
+
+        function executeCommand(index) {
+            if (filteredActions[index]) {
+                closeCommandPalette();
+                filteredActions[index].action();
+            }
+        }
+
+        function openCommandPalette() {
+            commandPalette.classList.add('active');
+            commandSearch.value = '';
+            renderCommands(commandPaletteActions);
+            commandSearch.focus();
+        }
+
+        function closeCommandPalette() {
+            commandPalette.classList.remove('active');
+        }
+
+        // Command palette event listeners
+        commandSearch.addEventListener('input', (e) => filterCommands(e.target.value));
+
+        commandSearch.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, filteredActions.length - 1);
+                updateSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                updateSelection();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                executeCommand(selectedIndex);
+            }
+        });
+
+        function updateSelection() {
+            commandResults.querySelectorAll('.command-item').forEach((item, idx) => {
+                item.classList.toggle('selected', idx === selectedIndex);
+                if (idx === selectedIndex) item.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        commandPalette.querySelector('.command-palette-backdrop').addEventListener('click', closeCommandPalette);
+
+        // Keyboard Help Modal
+        function showKeyboardHelp() {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.innerHTML = `
+                <div class="modal" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="keyboard-help-grid">
+                        <div>
+                            <div class="shortcut-category">Navigation</div>
+                            <div class="shortcut-row">
+                                <span>Go to Dashboard</span>
+                                <div class="shortcut-keys"><span>G</span><span>D</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Go to Podcasts</span>
+                                <div class="shortcut-keys"><span>G</span><span>P</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Go to Episodes</span>
+                                <div class="shortcut-keys"><span>G</span><span>E</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Go to Jobs</span>
+                                <div class="shortcut-keys"><span>G</span><span>J</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Go to Settings</span>
+                                <div class="shortcut-keys"><span>⌘</span><span>,</span></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="shortcut-category">Actions</div>
+                            <div class="shortcut-row">
+                                <span>Command Palette</span>
+                                <div class="shortcut-keys"><span>⌘</span><span>K</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>New Podcast</span>
+                                <div class="shortcut-keys"><span>N</span><span>P</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Show Help</span>
+                                <div class="shortcut-keys"><span>?</span></div>
+                            </div>
+                            <div class="shortcut-category" style="margin-top: var(--space-md);">Audio Player</div>
+                            <div class="shortcut-row">
+                                <span>Play/Pause</span>
+                                <div class="shortcut-keys"><span>Space</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Skip 15s</span>
+                                <div class="shortcut-keys"><span>←</span><span>→</span></div>
+                            </div>
+                            <div class="shortcut-row">
+                                <span>Mute</span>
+                                <div class="shortcut-keys"><span>M</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Got it</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // Global keyboard shortcuts
+        let lastKey = '';
+        let lastKeyTime = 0;
+
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in input
+            if (e.target.matches('input, textarea, select')) return;
+
+            const now = Date.now();
+            const key = e.key.toLowerCase();
+
+            // Command palette (Cmd+K or Ctrl+K)
+            if ((e.metaKey || e.ctrlKey) && key === 'k') {
+                e.preventDefault();
+                openCommandPalette();
+                return;
+            }
+
+            // Settings (Cmd+,)
+            if ((e.metaKey || e.ctrlKey) && key === ',') {
+                e.preventDefault();
+                window.location.href = '/settings';
+                return;
+            }
+
+            // Escape - close command palette
+            if (key === 'escape') {
+                closeCommandPalette();
+                return;
+            }
+
+            // Help
+            if (key === '?' && e.shiftKey) {
+                showKeyboardHelp();
+                return;
+            }
+
+            // Two-key shortcuts (within 500ms)
+            if (now - lastKeyTime < 500) {
+                const combo = lastKey + key;
+
+                switch (combo) {
+                    case 'gd': window.location.href = '/'; break;
+                    case 'gp': window.location.href = '/profiles'; break;
+                    case 'ge': window.location.href = '/episodes'; break;
+                    case 'gn': window.location.href = '/newsletters'; break;
+                    case 'gj': window.location.href = '/jobs'; break;
+                    case 'np': window.location.href = '/profiles/new'; break;
+                }
+
+                lastKey = '';
+                lastKeyTime = 0;
+            } else {
+                lastKey = key;
+                lastKeyTime = now;
+            }
+        });
+
+        // Expose keyboard help globally
+        window.showKeyboardHelp = showKeyboardHelp;
+
+        // ============================================================
+        // GLOBAL FORM LOADING STATES
+        // ============================================================
+
+        // Add loading state to forms on submit
+        document.querySelectorAll('form:not(.no-loading)').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Skip if already loading or if form has prevent-loading class
+                if (form.classList.contains('loading')) return;
+
+                const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn && !submitBtn.classList.contains('no-loading')) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+
+                    // Store original text
+                    if (!submitBtn.dataset.originalText) {
+                        submitBtn.dataset.originalText = submitBtn.innerHTML;
+                    }
+                }
+
+                form.classList.add('loading');
+            });
+        });
+
+        // Add required field indicators
+        document.querySelectorAll('input[required], select[required], textarea[required]').forEach(field => {
+            const label = field.closest('.form-group')?.querySelector('label') ||
+                          document.querySelector(`label[for="${field.id}"]`);
+            if (label && !label.querySelector('.required-indicator')) {
+                const indicator = document.createElement('span');
+                indicator.className = 'required-indicator';
+                indicator.textContent = ' *';
+                indicator.style.color = 'var(--error)';
+                indicator.setAttribute('aria-hidden', 'true');
+                label.appendChild(indicator);
+            }
         });
     </script>
 
-    {% block scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>

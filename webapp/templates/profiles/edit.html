@@ -17,6 +17,7 @@
 
     <!-- Form -->
     <form method="POST" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- Basic Info -->
         <div class="bg-white rounded-xl shadow-sm p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
@@ -189,6 +190,7 @@
         <!-- Submit -->
         <div class="flex justify-between">
             <form method="POST" action="/profiles/{{ profile.id }}/delete" class="inline" onsubmit="return confirm('Are you sure you want to delete this profile? This will also delete all episodes.')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
                     <i class="fas fa-trash mr-2"></i> Delete Profile
                 </button>

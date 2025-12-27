@@ -2,11 +2,1202 @@
 
 {% block title %}Generation Status - {{ profile.name }}{% endblock %}
 
-{% block content %}
-<!-- 
-    The initial load of this page includes the partial directly.
-    The partial itself contains the HTMX attributes to poll itself if the job is running.
--->
-{% include "generate/status_partial.html" %}
+{% block extra_css %}
+<style>
+    .status-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--space-lg);
+    }
 
+    .status-progress {
+        flex: 1;
+    }
+
+    .progress-percentage {
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .progress-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: var(--space-xs);
+    }
+
+    .eta-display {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .eta-display i {
+        color: var(--accent);
+    }
+
+    .stage-current {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .progress-track {
+        width: 100%;
+        height: 12px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        margin-top: var(--space-lg);
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, #7c3aed 100%);
+        border-radius: var(--radius-full);
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .progress-fill.complete {
+        background: var(--success);
+    }
+
+    .progress-fill.complete::after {
+        display: none;
+    }
+
+    .progress-fill.error {
+        background: var(--error);
+    }
+
+    .progress-fill.error::after {
+        display: none;
+    }
+
+    /* Pipeline Stages */
+    .pipeline-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .pipeline-header {
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pipeline-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .pipeline-counter {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stage-list {
+        list-style: none;
+    }
+
+    .stage-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        transition: background var(--transition-fast);
+    }
+
+    .stage-item:last-child {
+        border-bottom: none;
+    }
+
+    .stage-item.current {
+        background: var(--accent-light);
+    }
+
+    .stage-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        transition: all var(--transition-fast);
+    }
+
+    .stage-icon.pending {
+        background: var(--bg-tertiary);
+        color: var(--text-tertiary);
+    }
+
+    .stage-icon.current {
+        background: var(--accent);
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    .stage-icon.completed {
+        background: var(--success);
+        color: white;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .stage-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .stage-name {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .stage-description {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stage-status {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stage-status.pending {
+        color: var(--text-tertiary);
+    }
+
+    .stage-status.current {
+        color: var(--accent);
+    }
+
+    .stage-status.completed {
+        color: var(--success);
+    }
+
+    /* Error Card */
+    .error-card {
+        border-color: var(--error);
+        background: var(--error-light);
+    }
+
+    .error-header {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+
+    .error-icon {
+        font-size: 1.5rem;
+        color: var(--error);
+    }
+
+    .error-title {
+        font-weight: 600;
+        color: var(--error);
+        margin-bottom: var(--space-xs);
+    }
+
+    .error-message {
+        color: #991b1b;
+        font-size: 0.9rem;
+    }
+
+    .error-actions {
+        margin-top: var(--space-md);
+        display: flex;
+        gap: var(--space-sm);
+    }
+
+    /* Action Buttons */
+    .action-bar {
+        display: flex;
+        gap: var(--space-md);
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    /* Live Indicator */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: 0.8rem;
+        color: var(--success);
+        font-weight: 500;
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* Status Connection */
+    .connection-status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: 0.8rem;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+    }
+
+    .connection-status.connected {
+        background: var(--success-light);
+        color: #065f46;
+    }
+
+    .connection-status.disconnected {
+        background: var(--error-light);
+        color: #991b1b;
+    }
+
+    .connection-status.reconnecting {
+        background: var(--warning-light);
+        color: #92400e;
+    }
+
+    /* Activity Log */
+    .activity-log-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .activity-log-header {
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-secondary);
+    }
+
+    .activity-log-title {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .activity-log-title i {
+        color: var(--accent);
+    }
+
+    .current-activity {
+        font-size: 0.85rem;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .activity-log-container {
+        max-height: 350px;
+        overflow-y: auto;
+        font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+        font-size: 0.8rem;
+        background: #1a1a2e;
+        color: #e0e0e0;
+    }
+
+    .activity-entry {
+        display: flex;
+        padding: var(--space-sm) var(--space-md);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .activity-entry:last-child {
+        border-bottom: none;
+    }
+
+    .activity-timestamp {
+        color: #6b7280;
+        min-width: 85px;
+        flex-shrink: 0;
+    }
+
+    .activity-level {
+        min-width: 70px;
+        flex-shrink: 0;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        padding-top: 2px;
+    }
+
+    .activity-level.info { color: #60a5fa; }
+    .activity-level.success { color: #34d399; }
+    .activity-level.warning { color: #fbbf24; }
+    .activity-level.error { color: #f87171; }
+
+    .activity-message {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .activity-log-empty {
+        padding: var(--space-xl);
+        text-align: center;
+        color: var(--text-tertiary);
+    }
+
+    .activity-log-footer {
+        padding: var(--space-sm) var(--space-md);
+        background: #1a1a2e;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.75rem;
+        color: #6b7280;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .auto-scroll-toggle {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        cursor: pointer;
+    }
+
+    .auto-scroll-toggle input {
+        cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .status-hero {
+            flex-direction: column;
+        }
+
+        .progress-percentage {
+            font-size: 3rem;
+        }
+
+        .action-bar {
+            flex-direction: column;
+        }
+
+        .action-bar .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumbs">
+        <a href="/">Dashboard</a>
+        <span class="separator">/</span>
+        <a href="/profiles">Podcasts</a>
+        <span class="separator">/</span>
+        <a href="/profiles/{{ profile.id }}">{{ profile.name }}</a>
+        <span class="separator">/</span>
+        <span class="current">Generation</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">{{ profile.name }}</h1>
+            <p class="page-description">Job ID: {{ job.job_id }}</p>
+        </div>
+
+        <div id="status-badge">
+            {% if job.status == 'completed' %}
+            <span class="badge badge-success">
+                <i class="fas fa-check-circle"></i> Completed
+            </span>
+            {% elif job.status == 'failed' %}
+            <span class="badge badge-error">
+                <i class="fas fa-times-circle"></i> Failed
+            </span>
+            {% elif job.status == 'cancelled' %}
+            <span class="badge badge-warning">
+                <i class="fas fa-ban"></i> Cancelled
+            </span>
+            {% else %}
+            <span class="badge badge-info">
+                <i class="fas fa-spinner fa-spin"></i> {{ job.status|title }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="page-content" style="max-width: 900px;">
+
+    <!-- Progress Card -->
+    <div class="card" style="margin-bottom: var(--space-lg);" id="progress-card">
+        <div class="status-hero">
+            <div class="status-progress">
+                <div class="progress-percentage" id="progress-percent">{{ job.progress_percent or 0 }}%</div>
+                <div class="progress-label">Complete</div>
+
+                <div class="eta-display" id="eta-display">
+                    <i class="fas fa-clock"></i>
+                    <span id="eta-text">Calculating...</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="stage-current" id="current-stage">
+                    {{ job.current_stage|replace('_', ' ')|title if job.current_stage else 'Initializing' }}
+                </div>
+                <div style="margin-top: var(--space-sm);" id="connection-indicator">
+                    <span class="connection-status connected">
+                        <span class="live-dot"></span>
+                        Live updates
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-track">
+            <div class="progress-fill {% if job.status == 'completed' %}complete{% elif job.status == 'failed' %}error{% endif %}"
+                 id="progress-bar"
+                 style="width: {{ job.progress_percent or 0 }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Pipeline Stages -->
+    <div class="card pipeline-card" style="margin-bottom: var(--space-lg);" id="pipeline-card">
+        <div class="pipeline-header">
+            <h2 class="pipeline-title">Production Pipeline</h2>
+            <span class="pipeline-counter" id="stages-counter">
+                {{ (job.stages_completed or [])|length }} of 5 stages
+            </span>
+        </div>
+
+        <ul class="stage-list" id="stage-list">
+            {% set all_stages = [
+                ('research', 'Deep Research', 'fa-search', 'Gathering content from your sources'),
+                ('synthesis', 'Content Synthesis', 'fa-brain', 'Analyzing and organizing information'),
+                ('script', 'Script Generation', 'fa-file-alt', 'Writing engaging podcast script'),
+                ('audio', 'Audio Production', 'fa-microphone', 'Converting script to audio'),
+                ('newsletter', 'Newsletter Creation', 'fa-newspaper', 'Creating companion newsletter')
+            ] %}
+
+            {% for stage_id, stage_name, icon, description in all_stages %}
+            {% set is_completed = stage_id in (job.stages_completed or []) %}
+            {% set is_current = job.current_stage == stage_id %}
+
+            <li class="stage-item {% if is_current %}current{% endif %}" data-stage="{{ stage_id }}">
+                <div class="stage-icon {% if is_completed %}completed{% elif is_current %}current{% else %}pending{% endif %}">
+                    {% if is_completed %}
+                    <i class="fas fa-check"></i>
+                    {% elif is_current %}
+                    <i class="fas fa-spinner fa-spin"></i>
+                    {% else %}
+                    <i class="fas {{ icon }}"></i>
+                    {% endif %}
+                </div>
+
+                <div class="stage-info">
+                    <div class="stage-name">{{ stage_name }}</div>
+                    <div class="stage-description">{{ description }}</div>
+                </div>
+
+                <div class="stage-status {% if is_completed %}completed{% elif is_current %}current{% else %}pending{% endif %}">
+                    {% if is_current %}
+                    In Progress
+                    {% elif is_completed %}
+                    <i class="fas fa-check-circle"></i> Done
+                    {% else %}
+                    Pending
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="card activity-log-card" style="margin-bottom: var(--space-lg);" id="activity-log-card">
+        <div class="activity-log-header">
+            <h2 class="activity-log-title">
+                <i class="fas fa-terminal"></i>
+                Activity Log
+            </h2>
+            <div class="current-activity" id="current-activity-display">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span id="current-activity-text">{{ job.stage_details.current_activity if job.stage_details else 'Initializing...' }}</span>
+            </div>
+        </div>
+        <div class="activity-log-container" id="activity-log">
+            {% if job.stage_details and job.stage_details.activity_log %}
+                {% for entry in job.stage_details.activity_log %}
+                <div class="activity-entry">
+                    <span class="activity-timestamp">{{ entry.timestamp[-12:-7] if entry.timestamp else '' }}</span>
+                    <span class="activity-level {{ entry.level }}">{{ entry.level }}</span>
+                    <span class="activity-message">{{ entry.message }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="activity-log-empty">
+                <i class="fas fa-hourglass-start"></i>
+                <p>Waiting for activity...</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="activity-log-footer">
+            <span id="log-count">{{ (job.stage_details.activity_log|length) if job.stage_details and job.stage_details.activity_log else 0 }} entries</span>
+            <label class="auto-scroll-toggle">
+                <input type="checkbox" id="auto-scroll" checked>
+                Auto-scroll
+            </label>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="card error-card" id="error-card" style="{% if not job.error_message %}display: none;{% endif %} margin-bottom: var(--space-lg);">
+        <div class="error-header">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <div class="error-title">Generation Failed</div>
+                <div class="error-message" id="error-message">{{ job.error_message or '' }}</div>
+                <div class="error-actions">
+                    <form action="/jobs/{{ job.job_id }}/retry" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fas fa-redo"></i> Retry Same Settings
+                        </button>
+                    </form>
+                    <a href="/profiles/{{ profile.id }}/generate" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-cog"></i> New with Different Settings
+                    </a>
+                    <button class="btn btn-sm btn-ghost" onclick="showErrorDetails()">
+                        <i class="fas fa-info-circle"></i> Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-bar" id="action-bar">
+        {% if job.status in ['running', 'pending'] %}
+        <button type="button" class="btn btn-secondary" id="cancel-btn" onclick="cancelJob()">
+            <i class="fas fa-times"></i>
+            Cancel Generation
+        </button>
+        {% endif %}
+
+        {% if job.status == 'completed' and job.result_data and job.result_data.get('episode_id') %}
+        <a href="/episodes/{{ job.result_data.get('episode_id') }}" class="btn btn-success">
+            <i class="fas fa-play"></i>
+            View Episode
+        </a>
+        {% endif %}
+
+        <a href="/profiles/{{ profile.id }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Podcast
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Job status polling configuration
+    const JOB_ID = '{{ job.job_id }}';
+    const PROFILE_ID = '{{ profile.id }}';
+    const POLL_INTERVAL = 2000; // 2 seconds
+    const MAX_POLL_FAILURES = 5;
+
+    let pollFailures = 0;
+    let pollInterval = null;
+    let startTime = Date.now();
+    let lastProgress = {{ job.progress_percent or 0 }};
+
+    // Stage metadata
+    const STAGES = {
+        'research': { name: 'Deep Research', icon: 'fa-search', desc: 'Gathering content from your sources' },
+        'synthesis': { name: 'Content Synthesis', icon: 'fa-brain', desc: 'Analyzing and organizing information' },
+        'script': { name: 'Script Generation', icon: 'fa-file-alt', desc: 'Writing engaging podcast script' },
+        'audio': { name: 'Audio Production', icon: 'fa-microphone', desc: 'Converting script to audio' },
+        'newsletter': { name: 'Newsletter Creation', icon: 'fa-newspaper', desc: 'Creating companion newsletter' }
+    };
+
+    const STAGE_ORDER = ['research', 'synthesis', 'script', 'audio', 'newsletter'];
+
+    // Track seen log entries to avoid duplicates
+    let seenLogEntries = new Set();
+    let lastLogCount = 0;
+
+    // Toast notification system
+    function showToast(type, title, message, duration = 5000) {
+        const colors = {
+            success: { bg: 'var(--success-light)', border: 'var(--success)', icon: 'fa-check-circle' },
+            error: { bg: 'var(--error-light)', border: 'var(--error)', icon: 'fa-exclamation-circle' },
+            warning: { bg: 'var(--warning-light)', border: 'var(--warning)', icon: 'fa-exclamation-triangle' },
+            info: { bg: 'var(--accent-light)', border: 'var(--accent)', icon: 'fa-info-circle' }
+        };
+        const style = colors[type] || colors.info;
+
+        // Create toast container if it doesn't exist
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            background: ${style.bg};
+            border: 1px solid ${style.border};
+            border-radius: 8px;
+            padding: 12px 16px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        `;
+        toast.innerHTML = `
+            <i class="fas ${style.icon}" style="color: ${style.border}; font-size: 1.2rem; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: ${style.border}; margin-bottom: 2px;">${title}</div>
+                <div style="font-size: 0.85rem; color: #374151;">${message}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(toast);
+
+        // Auto-remove after duration
+        if (duration > 0) {
+            setTimeout(() => toast.remove(), duration);
+        }
+    }
+
+    // Add slideIn animation
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = '@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }';
+    document.head.appendChild(styleSheet);
+
+    // Update UI with new job data
+    function updateUI(job) {
+        // Update progress percentage
+        const progressEl = document.getElementById('progress-percent');
+        const progress = job.progress_percent || 0;
+        progressEl.textContent = `${progress}%`;
+
+        // Update progress bar
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.style.width = `${progress}%`;
+
+        if (job.status === 'completed') {
+            progressBar.classList.add('complete');
+            progressBar.classList.remove('error');
+        } else if (job.status === 'failed') {
+            progressBar.classList.add('error');
+            progressBar.classList.remove('complete');
+        } else {
+            progressBar.classList.remove('complete', 'error');
+        }
+
+        // Update current stage
+        const currentStageEl = document.getElementById('current-stage');
+        if (job.current_stage && STAGES[job.current_stage]) {
+            currentStageEl.textContent = STAGES[job.current_stage].name;
+        } else if (job.status === 'completed') {
+            currentStageEl.textContent = 'All stages complete';
+        } else {
+            currentStageEl.textContent = 'Initializing';
+        }
+
+        // Update stages counter
+        const completedCount = (job.stages_completed || []).length;
+        document.getElementById('stages-counter').textContent = `${completedCount} of 5 stages`;
+
+        // Update stage list
+        updateStageList(job);
+
+        // Update activity log
+        updateActivityLog(job);
+
+        // Update ETA
+        updateETA(progress);
+
+        // Update status badge
+        updateStatusBadge(job.status);
+
+        // Handle completion states
+        if (job.status === 'completed') {
+            handleCompletion(job);
+        } else if (job.status === 'failed') {
+            handleFailure(job);
+        } else if (job.status === 'cancelled') {
+            handleCancellation();
+        }
+
+        lastProgress = progress;
+    }
+
+    // Update activity log display
+    function updateActivityLog(job) {
+        const activityLog = job.activity_log || [];
+        const currentActivity = job.current_activity || '';
+        const logContainer = document.getElementById('activity-log');
+        const logCountEl = document.getElementById('log-count');
+        const currentActivityText = document.getElementById('current-activity-text');
+        const currentActivityDisplay = document.getElementById('current-activity-display');
+
+        // Update current activity display
+        if (currentActivity) {
+            currentActivityText.textContent = currentActivity;
+            if (job.status === 'completed') {
+                currentActivityDisplay.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> <span>Complete</span>';
+            } else if (job.status === 'failed') {
+                currentActivityDisplay.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error);"></i> <span>Failed</span>';
+            }
+        }
+
+        // Check if we have new entries
+        if (activityLog.length === 0) {
+            return;
+        }
+
+        // Clear empty state if present
+        const emptyState = logContainer.querySelector('.activity-log-empty');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        // Add new entries
+        activityLog.forEach((entry, index) => {
+            const entryKey = `${entry.timestamp}-${entry.message}`;
+            if (!seenLogEntries.has(entryKey)) {
+                seenLogEntries.add(entryKey);
+
+                const entryEl = document.createElement('div');
+                entryEl.className = 'activity-entry';
+
+                // Format timestamp (show HH:MM:SS)
+                const timestamp = entry.timestamp ? entry.timestamp.split('T')[1]?.substring(0, 8) || '' : '';
+
+                entryEl.innerHTML = `
+                    <span class="activity-timestamp">${timestamp}</span>
+                    <span class="activity-level ${entry.level}">${entry.level}</span>
+                    <span class="activity-message">${entry.message}</span>
+                `;
+
+                logContainer.appendChild(entryEl);
+            }
+        });
+
+        // Update count
+        logCountEl.textContent = `${activityLog.length} entries`;
+
+        // Auto-scroll if enabled
+        const autoScrollCheckbox = document.getElementById('auto-scroll');
+        if (autoScrollCheckbox.checked && activityLog.length > lastLogCount) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        lastLogCount = activityLog.length;
+    }
+
+    // Update individual stage items
+    function updateStageList(job) {
+        const stagesCompleted = job.stages_completed || [];
+        const currentStage = job.current_stage;
+
+        STAGE_ORDER.forEach(stageId => {
+            const stageItem = document.querySelector(`[data-stage="${stageId}"]`);
+            if (!stageItem) return;
+
+            const isCompleted = stagesCompleted.includes(stageId);
+            const isCurrent = currentStage === stageId;
+
+            // Update item classes
+            stageItem.classList.toggle('current', isCurrent);
+
+            // Update icon
+            const iconEl = stageItem.querySelector('.stage-icon');
+            iconEl.className = `stage-icon ${isCompleted ? 'completed' : (isCurrent ? 'current' : 'pending')}`;
+
+            if (isCompleted) {
+                iconEl.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (isCurrent) {
+                iconEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            } else {
+                iconEl.innerHTML = `<i class="fas ${STAGES[stageId].icon}"></i>`;
+            }
+
+            // Update status text
+            const statusEl = stageItem.querySelector('.stage-status');
+            statusEl.className = `stage-status ${isCompleted ? 'completed' : (isCurrent ? 'current' : 'pending')}`;
+
+            if (isCompleted) {
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Done';
+            } else if (isCurrent) {
+                statusEl.textContent = 'In Progress';
+            } else {
+                statusEl.textContent = 'Pending';
+            }
+        });
+    }
+
+    // Calculate and display ETA
+    function updateETA(currentProgress) {
+        const etaEl = document.getElementById('eta-text');
+
+        if (currentProgress >= 100) {
+            etaEl.textContent = 'Complete!';
+            return;
+        }
+
+        if (currentProgress <= 0) {
+            etaEl.textContent = 'Starting...';
+            return;
+        }
+
+        const elapsed = (Date.now() - startTime) / 1000; // seconds
+        const progressPerSecond = currentProgress / elapsed;
+
+        if (progressPerSecond <= 0) {
+            etaEl.textContent = 'Calculating...';
+            return;
+        }
+
+        const remainingProgress = 100 - currentProgress;
+        const estimatedSeconds = remainingProgress / progressPerSecond;
+
+        if (estimatedSeconds < 60) {
+            etaEl.textContent = `About ${Math.ceil(estimatedSeconds)} seconds remaining`;
+        } else if (estimatedSeconds < 3600) {
+            const mins = Math.ceil(estimatedSeconds / 60);
+            etaEl.textContent = `About ${mins} minute${mins > 1 ? 's' : ''} remaining`;
+        } else {
+            etaEl.textContent = 'This may take a while...';
+        }
+    }
+
+    // Update status badge
+    function updateStatusBadge(status) {
+        const badgeEl = document.getElementById('status-badge');
+
+        const badges = {
+            'completed': '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Completed</span>',
+            'failed': '<span class="badge badge-error"><i class="fas fa-times-circle"></i> Failed</span>',
+            'cancelled': '<span class="badge badge-warning"><i class="fas fa-ban"></i> Cancelled</span>',
+            'running': '<span class="badge badge-info"><i class="fas fa-spinner fa-spin"></i> Running</span>',
+            'pending': '<span class="badge badge-info"><i class="fas fa-clock"></i> Pending</span>'
+        };
+
+        badgeEl.innerHTML = badges[status] || badges['pending'];
+    }
+
+    // Handle successful completion
+    function handleCompletion(job) {
+        stopPolling();
+
+        // Update connection indicator
+        document.getElementById('connection-indicator').innerHTML = `
+            <span class="connection-status connected">
+                <i class="fas fa-check"></i>
+                Generation complete
+            </span>
+        `;
+
+        // Show success toast
+        showToast('success', 'Episode Ready!', 'Your podcast episode has been generated successfully.');
+
+        // Update action bar
+        if (job.result_data && job.result_data.episode_id) {
+            document.getElementById('action-bar').innerHTML = `
+                <a href="/episodes/${job.result_data.episode_id}" class="btn btn-success">
+                    <i class="fas fa-play"></i>
+                    View Episode
+                </a>
+                <a href="/profiles/${PROFILE_ID}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Podcast
+                </a>
+            `;
+        }
+    }
+
+    // Handle failure
+    function handleFailure(job) {
+        stopPolling();
+
+        // Show error card
+        const errorCard = document.getElementById('error-card');
+        errorCard.style.display = 'block';
+        document.getElementById('error-message').textContent = job.error_message || 'An unknown error occurred';
+
+        // Update connection indicator
+        document.getElementById('connection-indicator').innerHTML = `
+            <span class="connection-status disconnected">
+                <i class="fas fa-times"></i>
+                Generation failed
+            </span>
+        `;
+
+        // Show error toast
+        showToast('error', 'Generation Failed', job.error_message || 'Please try again');
+
+        // Update action bar
+        document.getElementById('action-bar').innerHTML = `
+            <a href="/profiles/${PROFILE_ID}/generate" class="btn btn-primary">
+                <i class="fas fa-redo"></i>
+                Try Again
+            </a>
+            <a href="/profiles/${PROFILE_ID}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Podcast
+            </a>
+        `;
+    }
+
+    // Handle cancellation
+    function handleCancellation() {
+        stopPolling();
+
+        document.getElementById('connection-indicator').innerHTML = `
+            <span class="connection-status disconnected">
+                <i class="fas fa-ban"></i>
+                Cancelled
+            </span>
+        `;
+
+        showToast('warning', 'Generation Cancelled', 'The job was cancelled');
+
+        document.getElementById('action-bar').innerHTML = `
+            <a href="/profiles/${PROFILE_ID}/generate" class="btn btn-primary">
+                <i class="fas fa-redo"></i>
+                Start New Generation
+            </a>
+            <a href="/profiles/${PROFILE_ID}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Podcast
+            </a>
+        `;
+    }
+
+    // Poll for job status
+    async function pollJobStatus() {
+        try {
+            const response = await fetch(`/api/jobs/${JOB_ID}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const job = await response.json();
+            pollFailures = 0; // Reset failures on success
+
+            // Update connection status
+            updateConnectionStatus('connected');
+
+            // Update UI
+            updateUI(job);
+
+            // Stop polling if job is in terminal state
+            if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+                stopPolling();
+            }
+
+        } catch (error) {
+            console.error('Poll error:', error);
+            pollFailures++;
+
+            if (pollFailures >= MAX_POLL_FAILURES) {
+                updateConnectionStatus('disconnected');
+                showToast('warning', 'Connection Lost', 'Unable to get job status. Retrying...');
+            } else {
+                updateConnectionStatus('reconnecting');
+            }
+        }
+    }
+
+    // Update connection status indicator
+    function updateConnectionStatus(status) {
+        const indicator = document.getElementById('connection-indicator');
+
+        const statuses = {
+            'connected': '<span class="connection-status connected"><span class="live-dot"></span> Live updates</span>',
+            'disconnected': '<span class="connection-status disconnected"><i class="fas fa-exclamation-triangle"></i> Connection lost</span>',
+            'reconnecting': '<span class="connection-status reconnecting"><i class="fas fa-sync fa-spin"></i> Reconnecting...</span>'
+        };
+
+        indicator.innerHTML = statuses[status] || statuses['connected'];
+    }
+
+    // Start polling
+    function startPolling() {
+        if (pollInterval) return;
+        pollInterval = setInterval(pollJobStatus, POLL_INTERVAL);
+        // Initial poll
+        pollJobStatus();
+    }
+
+    // Stop polling
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    // Cancel job
+    async function cancelJob() {
+        const confirmed = await showConfirm({
+            type: 'warning',
+            title: 'Cancel Generation?',
+            message: 'This will stop the current generation. Any progress will be lost.',
+            confirmText: 'Yes, Cancel',
+            cancelText: 'Continue'
+        });
+
+        if (!confirmed) return;
+
+        const cancelBtn = document.getElementById('cancel-btn');
+        cancelBtn.classList.add('loading');
+        cancelBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/jobs/${JOB_ID}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                showToast('info', 'Job Cancelled', 'The generation has been cancelled');
+                // Poll immediately to get updated status
+                pollJobStatus();
+            } else {
+                throw new Error('Failed to cancel');
+            }
+        } catch (error) {
+            showToast('error', 'Cancel Failed', 'Unable to cancel the job');
+            cancelBtn.classList.remove('loading');
+            cancelBtn.disabled = false;
+        }
+    }
+
+    // Show error details modal
+    function showErrorDetails() {
+        const errorMsg = document.getElementById('error-message').textContent;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.innerHTML = `
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Error Details</h3>
+                    <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius-md); font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;">
+${errorMsg}
+                    </div>
+                    <div style="margin-top: var(--space-lg);">
+                        <h4 style="font-size: 0.9rem; margin-bottom: var(--space-sm);">Possible Solutions:</h4>
+                        <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: var(--space-lg);">
+                            <li>Check your API keys are valid and have sufficient credits</li>
+                            <li>Verify your content sources are accessible</li>
+                            <li>Try reducing the episode duration</li>
+                            <li>Check your internet connection</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                    <a href="/profiles/${PROFILE_ID}/generate" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Try Again
+                    </a>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        const status = '{{ job.status }}';
+
+        // Only poll if job is still running
+        if (['running', 'pending'].includes(status)) {
+            startPolling();
+        } else if (status === 'completed') {
+            document.getElementById('eta-text').textContent = 'Complete!';
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', stopPolling);
+</script>
 {% endblock %}

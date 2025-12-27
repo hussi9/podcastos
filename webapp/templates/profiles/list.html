@@ -3,72 +3,148 @@
 {% block title %}Podcast Profiles - Podcast Studio{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div style="max-width: 1200px; margin: 0 auto; ">
     <!-- Header -->
-    <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-xl);">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Podcast Profiles</h1>
-            <p class="text-slate-500 mt-1">Manage your podcast configurations and workflows</p>
+            <h1 style="margin: 0; font-size: 1.75rem;">Podcast Profiles</h1>
+            <p style="color: var(--color-text-secondary); margin-top: 4px;">Manage your podcast configurations and
+                workflows</p>
         </div>
-        <a href="/profiles/new"
-            class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-sm font-medium text-sm">
-            <i class="fas fa-plus mr-2"></i> New Profile
+        <a href="/profiles/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Profile
         </a>
     </div>
 
-    <!-- Profiles Grid -->
-    {% if profiles %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for profile in profiles %}
+    <!-- Workflow Visualization (Context for the User) -->
+    <div class="card" style="margin-bottom: var(--space-xl); background: linear-gradient(to right, #1a1b2e, #2d2e42);">
+        <h3 style="margin-bottom: var(--space-md); color: white;">Production Workflow</h3>
         <div
-            class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-300 transition group relative overflow-hidden flex flex-col h-full">
-            <!-- Accent Bar -->
-            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition">
+            style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md); overflow-x: auto; padding-bottom: var(--space-sm);">
+
+            <div style="text-align: center; color: white; opacity: 0.9; min-width: 100px;">
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xs);">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600;">1. Profile</div>
+                <div style="font-size: 0.65rem; opacity: 0.7;">Define Hosts & Tone</div>
             </div>
 
-            <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold text-lg text-slate-900 group-hover:text-indigo-700 transition">{{ profile.name
-                    }}</h3>
-                <span
-                    class="px-2 py-0.5 text-xs rounded-full font-medium border {% if profile.is_active %}bg-green-50 text-green-700 border-green-200{% else %}bg-slate-100 text-slate-600 border-slate-200{% endif %}">
-                    {{ 'Active' if profile.is_active else 'Inactive' }}
-                </span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></div>
+
+            <div style="text-align: center; color: white; opacity: 0.9; min-width: 100px;">
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xs);">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600;">2. Research</div>
+                <div style="font-size: 0.65rem; opacity: 0.7;">Deep Dive Agents</div>
             </div>
 
-            <p class="text-slate-500 text-sm mb-6 flex-1">{{ profile.description[:100] }}{% if
-                profile.description|length > 100 %}...{% endif %}</p>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></div>
 
-            <div class="flex items-center text-xs text-slate-400 mb-5 gap-4">
-                <span class="flex items-center"><i class="fas fa-users mr-1.5 opacity-70"></i> {{ profile.hosts|length
-                    }} Hosts</span>
-                <span class="flex items-center"><i class="fas fa-clock mr-1.5 opacity-70"></i> {{
-                    profile.target_duration_minutes }} min</span>
-                <span class="flex items-center"><i class="fas fa-rss mr-1.5 opacity-70"></i> {{ profile.sources|length
-                    }} Sources</span>
+            <div style="text-align: center; color: white; opacity: 0.9; min-width: 100px;">
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xs);">
+                    <i class="fas fa-pen-fancy"></i>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600;">3. Script</div>
+                <div style="font-size: 0.65rem; opacity: 0.7;">Editorial Review</div>
             </div>
 
-            <div class="flex gap-2">
-                <a href="/profiles/{{ profile.id }}/generate"
-                    class="flex-1 bg-slate-900 text-white py-2 rounded-lg text-xs font-medium text-center hover:bg-slate-800 transition">
-                    <i class="fas fa-bolt mr-1"></i> Generate
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></div>
+
+            <div style="text-align: center; color: white; opacity: 0.9; min-width: 100px;">
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xs);">
+                    <i class="fas fa-microphone-alt"></i>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600;">4. Audio</div>
+                <div style="font-size: 0.65rem; opacity: 0.7;">Multi-Speaker TTS</div>
+            </div>
+
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.2);"></div>
+
+            <div style="text-align: center; color: white; opacity: 1.0; min-width: 100px;">
+                <div
+                    style="width: 40px; height: 40px; background: var(--color-accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xs); box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600;">5. Newsletter</div>
+                <div style="font-size: 0.65rem; opacity: 0.7;">Auto-Generated</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profiles List -->
+    {% if profiles %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-lg);">
+        {% for profile in profiles %}
+        <div class="card"
+            style="display: flex; flex-direction: column; height: 100%; transition: transform 0.2s; position: relative; padding: 0;">
+
+            <!-- Card Header -->
+            <div style="padding: var(--space-lg); border-bottom: 1px solid var(--border-color-dim);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">
+                        <a href="/profiles/{{ profile.id }}"
+                            style="color: var(--color-text-primary); text-decoration: none;">
+                            {{ profile.name }}
+                        </a>
+                    </h3>
+                    <span
+                        style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; {% if profile.is_active %}background: var(--color-success-subtle); color: var(--color-success);{% else %}background: var(--color-bg-hover); color: var(--color-text-muted);{% endif %}">
+                        {{ 'Active' if profile.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                <p
+                    style="color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.7em;">
+                    {{ profile.description }}
+                </p>
+            </div>
+
+            <!-- Stats Bar -->
+            <div
+                style="padding: var(--space-md) var(--space-lg); background: var(--color-bg-base); display: flex; gap: var(--space-lg); font-size: 0.8rem; color: var(--color-text-muted); border-bottom: 1px solid var(--border-color-dim);">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-users"></i> {{ profile.hosts|length }} Hosts
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-clock"></i> {{ profile.target_duration_minutes }} min
+                </div>
+            </div>
+
+            <!-- Action Footer -->
+            <div
+                style="padding: var(--space-md) var(--space-lg); margin-top: auto; display: flex; gap: var(--space-md);">
+                <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary"
+                    style="flex: 1; justify-content: center;">
+                    <i class="fas fa-bolt" style="margin-right: 6px;"></i> Generate
                 </a>
-                <a href="/profiles/{{ profile.id }}"
-                    class="flex-1 bg-slate-100 text-slate-700 py-2 rounded-lg text-xs font-medium text-center hover:bg-slate-200 transition">
-                    <i class="fas fa-cog mr-1"></i> Manage
+                <a href="/profiles/{{ profile.id }}" class="btn btn-secondary"
+                    style="flex: 1; justify-content: center;">
+                    <i class="fas fa-cog" style="margin-right: 6px;"></i> Settings
                 </a>
             </div>
+
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-microphone-slash text-slate-300 text-2xl"></i>
+    <div class="card" style="text-align: center; padding: var(--space-xl) 2rem;">
+        <div
+            style="width: 80px; height: 80px; background-color: var(--color-bg-hover); border-radius: 50%; margin: 0 auto var(--space-lg) auto; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-microphone-slash" style="font-size: 2rem; color: var(--color-text-muted);"></i>
         </div>
-        <h3 class="text-slate-900 font-medium mb-1">No Profiles Yet</h3>
-        <p class="text-slate-500 text-sm mb-4">Create your first podcast persona to get started.</p>
-        <a href="/profiles/new" class="inline-flex items-center text-indigo-600 font-medium text-sm hover:underline">
-            Create Profile <i class="fas fa-arrow-right ml-1"></i>
+        <h3 style="margin-bottom: var(--space-xs); font-size: 1.5rem;">No Profiles Yet</h3>
+        <p
+            style="color: var(--color-text-secondary); margin-bottom: var(--space-xl); max-width: 400px; margin-left: auto; margin-right: auto;">
+            Create your first podcast persona to define your hosts, tone, and content sources.
+        </p>
+        <a href="/profiles/new" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem;">
+            Create First Profile
         </a>
     </div>
     {% endif %}

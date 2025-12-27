@@ -124,7 +124,10 @@ class RSSGenerator:
             # Parse date for RSS format
             try:
                 ep_date = datetime.fromisoformat(ep.date.replace("Z", "+00:00"))
-            except:
+            except (ValueError, AttributeError) as e:
+                # Invalid date format or missing date - use current time
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to parse episode date '{ep.date}': {e}")
                 ep_date = datetime.now()
 
             # RFC 2822 date format for RSS

@@ -60,14 +60,16 @@ class ContentRanker:
         )
         self.uscis = USCISAggregator()
 
-    async def gather_all_content(self) -> dict:
+    async def gather_all_content(self, subreddits: list[str] = None) -> dict:
         """Gather content from all sources"""
         import asyncio
 
         logger.info("Gathering content from all sources...")
 
         # Fetch from all sources concurrently
-        reddit_task = self.reddit.get_trending_topics(min_score=30, min_comments=5, limit=30)
+        reddit_task = self.reddit.get_trending_topics(
+            min_score=30, min_comments=5, limit=30, subreddits=subreddits
+        )
         news_task = self.news.get_top_stories(limit=20)
         uscis_task = self.uscis.get_all_updates()
 
@@ -387,9 +389,9 @@ class ContentRanker:
         else:
             return "neutral"
 
-    async def get_ranked_topics(self, limit: int = 5) -> list[PodcastTopic]:
+    async def get_ranked_topics(self, limit: int = 5, subreddits: list[str] = None) -> list[PodcastTopic]:
         """Get ranked topics for the podcast"""
-        content = await self.gather_all_content()
+        content = await self.gather_all_content(subreddits=subreddits)
         topics = self.cluster_by_topic(content)
 
         # Sort by score

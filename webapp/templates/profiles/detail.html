@@ -2,220 +2,923 @@
 
 {% block title %}{{ profile.name }} - Podcast Studio{% endblock %}
 
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Profile Header */
+    .profile-header {
+        display: flex;
+        gap: var(--space-xl);
+        margin-bottom: var(--space-2xl);
+        padding-bottom: var(--space-xl);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        flex-shrink: 0;
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .profile-title-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        margin-bottom: var(--space-sm);
+    }
+
+    .profile-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .profile-status {
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .profile-status.active {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .profile-status.inactive {
+        background: var(--bg-tertiary);
+        color: var(--text-tertiary);
+    }
+
+    .profile-description {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-md);
+        max-width: 700px;
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-lg);
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .profile-meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: flex-start;
+    }
+
+    /* Quick Actions Bar */
+    .quick-actions {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+        padding: var(--space-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+    }
+
+    .quick-action {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md);
+        background: var(--bg-primary);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all var(--transition-fast);
+        border: 1px solid var(--border-color);
+    }
+
+    .quick-action:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .quick-action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .quick-action-icon.generate {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .quick-action-icon.host {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .quick-action-icon.source {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .quick-action-icon.edit {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .quick-action-label {
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--space-xl);
+    }
+
+    @media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Section Cards */
+    .section-card {
+        margin-bottom: var(--space-lg);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .section-title i {
+        color: var(--accent);
+    }
+
+    /* Host Cards */
+    .host-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .host-card {
+        display: flex;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    .host-card:hover {
+        border-color: var(--accent);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .host-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .host-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .host-name {
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .host-role {
+        font-size: 0.75rem;
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--accent-light);
+        color: var(--accent);
+        border-radius: var(--radius-full);
+    }
+
+    .host-persona {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-sm);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .host-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .host-tag {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+    }
+
+    .host-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    /* Source Grid */
+    .source-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .source-card {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    .source-card:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .source-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .source-icon.reddit { background: #ff450020; color: #ff4500; }
+    .source-icon.rss { background: #f5820020; color: #f58200; }
+    .source-icon.news { background: #10b98120; color: #10b981; }
+    .source-icon.twitter { background: #1da1f220; color: #1da1f2; }
+
+    .source-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .source-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .source-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .source-toggle {
+        width: 40px;
+        height: 22px;
+        border-radius: var(--radius-full);
+        background: var(--bg-tertiary);
+        position: relative;
+        cursor: pointer;
+        transition: background var(--transition-fast);
+    }
+
+    .source-toggle.active {
+        background: var(--success);
+    }
+
+    .source-toggle::after {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: white;
+        top: 2px;
+        left: 2px;
+        transition: transform var(--transition-fast);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .source-toggle.active::after {
+        transform: translateX(18px);
+    }
+
+    /* Episode List */
+    .episode-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .episode-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: inherit;
+        transition: background var(--transition-fast);
+    }
+
+    .episode-item:hover {
+        background: var(--bg-secondary);
+    }
+
+    .episode-play-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all var(--transition-fast);
+    }
+
+    .episode-item:hover .episode-play-btn {
+        transform: scale(1.1);
+    }
+
+    .episode-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .episode-title {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .episode-meta {
+        display: flex;
+        gap: var(--space-md);
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Sidebar Settings */
+    .settings-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .settings-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .settings-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .settings-value {
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    /* Avoidance List */
+    .avoid-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .avoid-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .avoid-item:last-child {
+        border-bottom: none;
+    }
+
+    .avoid-type {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+    }
+
+    .avoid-type.permanent {
+        background: var(--error-light);
+        color: var(--error);
+    }
+
+    .avoid-type.temporary {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    /* Empty State */
+    .empty-state-mini {
+        text-align: center;
+        padding: var(--space-xl) var(--space-lg);
+        color: var(--text-secondary);
+    }
+
+    .empty-state-mini i {
+        font-size: 2rem;
+        color: var(--text-tertiary);
+        margin-bottom: var(--space-md);
+    }
+
+    /* Category Tags */
+    .category-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+    }
+
+    .category-tag {
+        font-size: 0.85rem;
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--accent-light);
+        color: var(--accent);
+        border-radius: var(--radius-full);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+        }
+
+        .profile-actions {
+            width: 100%;
+        }
+
+        .profile-actions .btn {
+            flex: 1;
+        }
+
+        .quick-actions {
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            min-width: calc(50% - var(--space-md));
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8">
-    <!-- Header -->
-    <div class="flex justify-between items-start">
-        <div>
-            <div class="flex items-center space-x-3">
-                <a href="/profiles" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h1 class="text-3xl font-bold text-gray-900">{{ profile.name }}</h1>
-                <span class="px-3 py-1 text-sm rounded-full {% if profile.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="fas fa-podcast"></i>
+        </div>
+
+        <div class="profile-info">
+            <div class="profile-title-row">
+                <h1 class="profile-title">{{ profile.name }}</h1>
+                <span class="profile-status {{ 'active' if profile.is_active else 'inactive' }}">
                     {{ 'Active' if profile.is_active else 'Inactive' }}
                 </span>
             </div>
-            <p class="text-gray-600 mt-2">{{ profile.description }}</p>
+
+            <p class="profile-description">{{ profile.description or 'No description provided' }}</p>
+
+            <div class="profile-meta">
+                <span class="profile-meta-item">
+                    <i class="fas fa-users"></i> {{ profile.hosts|length }} host{% if profile.hosts|length != 1 %}s{% endif %}
+                </span>
+                <span class="profile-meta-item">
+                    <i class="fas fa-rss"></i> {{ profile.sources|length }} source{% if profile.sources|length != 1 %}s{% endif %}
+                </span>
+                <span class="profile-meta-item">
+                    <i class="fas fa-microphone"></i> {{ episodes|length }} episode{% if episodes|length != 1 %}s{% endif %}
+                </span>
+                <span class="profile-meta-item">
+                    <i class="fas fa-clock"></i> {{ profile.target_duration_minutes }} min episodes
+                </span>
+            </div>
         </div>
-        <div class="flex space-x-3">
-            <a href="/profiles/{{ profile.id }}/edit" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-edit mr-2"></i> Edit
+
+        <div class="profile-actions">
+            <a href="/profiles/{{ profile.id }}/edit" class="btn btn-secondary">
+                <i class="fas fa-edit"></i> Edit
             </a>
-            <a href="/profiles/{{ profile.id }}/generate" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-play mr-2"></i> Generate Episode
+            <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary btn-lg">
+                <i class="fas fa-play"></i> Generate Episode
             </a>
         </div>
     </div>
 
-    <!-- Profile Settings Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Settings -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Hosts -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        <i class="fas fa-users mr-2 text-purple-600"></i> Hosts
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="/profiles/{{ profile.id }}/generate" class="quick-action">
+            <div class="quick-action-icon generate">
+                <i class="fas fa-play"></i>
+            </div>
+            <span class="quick-action-label">Generate</span>
+        </a>
+        <a href="/profiles/{{ profile.id }}/hosts/new" class="quick-action">
+            <div class="quick-action-icon host">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <span class="quick-action-label">Add Host</span>
+        </a>
+        <a href="/profiles/{{ profile.id }}/sources/new" class="quick-action">
+            <div class="quick-action-icon source">
+                <i class="fas fa-plus"></i>
+            </div>
+            <span class="quick-action-label">Add Source</span>
+        </a>
+        <a href="/profiles/{{ profile.id }}/edit" class="quick-action">
+            <div class="quick-action-icon edit">
+                <i class="fas fa-cog"></i>
+            </div>
+            <span class="quick-action-label">Settings</span>
+        </a>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Main Content -->
+        <div>
+            <!-- Hosts Section -->
+            <div class="card section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i> Hosts
                     </h2>
-                    <a href="/profiles/{{ profile.id }}/hosts/new" class="text-purple-600 hover:text-purple-800 text-sm">
-                        <i class="fas fa-plus mr-1"></i> Add Host
+                    <a href="/profiles/{{ profile.id }}/hosts/new" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-plus"></i> Add Host
                     </a>
                 </div>
 
                 {% if profile.hosts %}
-                <div class="space-y-4">
+                <div class="host-list">
                     {% for host in profile.hosts %}
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-900">{{ host.name }}</h3>
-                                <p class="text-sm text-gray-500 mt-1">{{ host.persona[:100] }}{% if host.persona|length > 100 %}...{% endif %}</p>
+                    <div class="host-card">
+                        <div class="host-avatar">{{ host.name[0].upper() }}</div>
+                        <div class="host-info">
+                            <div class="host-name">
+                                {{ host.name }}
+                                {% if loop.first %}
+                                <span class="host-role">Primary</span>
+                                {% endif %}
                             </div>
-                            <span class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
-                                Voice: {{ host.voice_name }}
-                            </span>
+                            <p class="host-persona">{{ host.persona }}</p>
+                            <div class="host-tags">
+                                <span class="host-tag"><i class="fas fa-microphone"></i> {{ host.voice_name }}</span>
+                                {% for area in (host.expertise_areas or [])[:3] %}
+                                <span class="host-tag">{{ area }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
-                        {% if host.expertise_areas %}
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            {% for area in host.expertise_areas %}
-                            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">{{ area }}</span>
-                            {% endfor %}
+                        <div class="host-actions">
+                            <a href="/profiles/{{ profile.id }}/hosts/{{ host.id }}/edit" class="btn btn-ghost btn-sm" title="Edit" aria-label="Edit {{ host.name }}">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="/profiles/{{ profile.id }}/hosts/{{ host.id }}/delete" style="display: inline;" class="delete-form">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="Remove" style="color: var(--error);"
+                                        aria-label="Delete {{ host.name }}" data-confirm-title="Remove Host?"
+                                        data-confirm-message="Are you sure you want to remove {{ host.name }}?">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </div>
-                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-gray-500 text-center py-4">No hosts configured</p>
+                <div class="empty-state-mini">
+                    <i class="fas fa-user-plus"></i>
+                    <p>No hosts configured yet</p>
+                    <a href="/profiles/{{ profile.id }}/hosts/new" class="btn btn-primary btn-sm">
+                        Add Your First Host
+                    </a>
+                </div>
                 {% endif %}
             </div>
 
             <!-- Content Sources -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        <i class="fas fa-rss mr-2 text-purple-600"></i> Content Sources
+            <div class="card section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-rss"></i> Content Sources
                     </h2>
-                    <a href="/profiles/{{ profile.id }}/sources" class="text-purple-600 hover:text-purple-800 text-sm">
-                        Manage <i class="fas fa-arrow-right ml-1"></i>
+                    <a href="/profiles/{{ profile.id }}/sources" class="btn btn-ghost btn-sm">
+                        Manage All <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
 
                 {% if profile.sources %}
-                <div class="grid grid-cols-2 gap-3">
-                    {% for source in profile.sources[:6] %}
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center
-                            {% if source.source_type == 'reddit' %}bg-orange-100 text-orange-600
-                            {% elif source.source_type == 'rss' %}bg-blue-100 text-blue-600
-                            {% elif source.source_type == 'google_news' %}bg-green-100 text-green-600
-                            {% else %}bg-gray-100 text-gray-600{% endif %}">
-                            <i class="fas {% if source.source_type == 'reddit' %}fa-reddit{% elif source.source_type == 'rss' %}fa-rss{% else %}fa-newspaper{% endif %}"></i>
+                <div class="source-grid">
+                    {% for source in profile.sources[:8] %}
+                    <div class="source-card">
+                        <div class="source-icon {{ source.source_type }}">
+                            {% if source.source_type == 'reddit' %}
+                            <i class="fab fa-reddit-alien"></i>
+                            {% elif source.source_type == 'rss' %}
+                            <i class="fas fa-rss"></i>
+                            {% elif source.source_type == 'twitter' %}
+                            <i class="fab fa-twitter"></i>
+                            {% else %}
+                            <i class="fas fa-newspaper"></i>
+                            {% endif %}
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">{{ source.name }}</p>
-                            <p class="text-xs text-gray-500">Priority: {{ source.priority }}/10</p>
+                        <div class="source-info">
+                            <div class="source-name">{{ source.name }}</div>
+                            <div class="source-meta">Priority {{ source.priority }}/10</div>
+                        </div>
+                        <div class="source-toggle {{ 'active' if source.is_active else '' }}"
+                             onclick="toggleSource({{ source.id }}, this)" title="Toggle active">
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                {% if profile.sources|length > 6 %}
-                <p class="text-sm text-gray-500 mt-3 text-center">+{{ profile.sources|length - 6 }} more sources</p>
+                {% if profile.sources|length > 8 %}
+                <p style="text-align: center; margin-top: var(--space-md); color: var(--text-secondary);">
+                    +{{ profile.sources|length - 8 }} more sources
+                    <a href="/profiles/{{ profile.id }}/sources">View all</a>
+                </p>
                 {% endif %}
                 {% else %}
-                <p class="text-gray-500 text-center py-4">No sources configured</p>
+                <div class="empty-state-mini">
+                    <i class="fas fa-rss"></i>
+                    <p>No content sources added yet</p>
+                    <a href="/profiles/{{ profile.id }}/sources/new" class="btn btn-primary btn-sm">
+                        Add Content Source
+                    </a>
+                </div>
                 {% endif %}
             </div>
 
             <!-- Recent Episodes -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        <i class="fas fa-history mr-2 text-purple-600"></i> Recent Episodes
+            <div class="card section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i> Recent Episodes
                     </h2>
+                    {% if episodes %}
+                    <a href="/episodes?profile={{ profile.id }}" class="btn btn-ghost btn-sm">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                    {% endif %}
                 </div>
 
                 {% if episodes %}
-                <div class="space-y-3">
+                <div class="episode-list">
                     {% for episode in episodes[:5] %}
-                    <a href="/episodes/{{ episode.id }}" class="block p-4 border border-gray-200 rounded-lg hover:border-purple-300 transition">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-medium text-gray-900">{{ episode.title }}</h3>
-                                <p class="text-sm text-gray-500">{{ episode.date.strftime('%B %d, %Y') }}</p>
+                    <a href="/episodes/{{ episode.id }}" class="episode-item">
+                        <div class="episode-play-btn">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <div class="episode-info">
+                            <div class="episode-title">{{ episode.title }}</div>
+                            <div class="episode-meta">
+                                <span><i class="fas fa-calendar"></i> {{ episode.date.strftime('%b %d, %Y') if episode.date else 'Unknown' }}</span>
+                                <span><i class="fas fa-clock"></i> {{ (episode.duration_seconds or 0) // 60 }} min</span>
+                                {% if episode.topics_covered %}
+                                <span>{{ episode.topics_covered|length }} topics</span>
+                                {% endif %}
                             </div>
-                            <span class="text-sm text-gray-500">{{ (episode.duration_seconds or 0) // 60 }} min</span>
                         </div>
-                        {% if episode.topics_covered %}
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            {% for topic in episode.topics_covered[:3] %}
-                            <span class="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">{{ topic }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
                     </a>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-gray-500 text-center py-4">No episodes yet</p>
+                <div class="empty-state-mini">
+                    <i class="fas fa-microphone"></i>
+                    <p>No episodes generated yet</p>
+                    <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary btn-sm">
+                        Generate First Episode
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Sidebar -->
-        <div class="space-y-6">
+        <div>
             <!-- Settings Summary -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+            <div class="card section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-sliders-h"></i> Settings
+                    </h2>
+                    <a href="/profiles/{{ profile.id }}/edit" class="btn btn-ghost btn-sm">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Duration</p>
-                        <p class="font-medium">{{ profile.target_duration_minutes }} minutes</p>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span class="settings-label">Duration</span>
+                        <span class="settings-value">{{ profile.target_duration_minutes }} min</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Topics per Episode</p>
-                        <p class="font-medium">{{ profile.topic_count }} topics</p>
+                    <div class="settings-item">
+                        <span class="settings-label">Topics/Episode</span>
+                        <span class="settings-value">{{ profile.topic_count }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Tone</p>
-                        <p class="font-medium capitalize">{{ profile.tone }}</p>
+                    <div class="settings-item">
+                        <span class="settings-label">Tone</span>
+                        <span class="settings-value" style="text-transform: capitalize;">{{ profile.tone }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Language</p>
-                        <p class="font-medium">{{ profile.language }}</p>
+                    <div class="settings-item">
+                        <span class="settings-label">Language</span>
+                        <span class="settings-value">{{ profile.language }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">TTS Model</p>
-                        <p class="font-medium text-sm">{{ profile.tts_model }}</p>
+                    <div class="settings-item">
+                        <span class="settings-label">TTS Model</span>
+                        <span class="settings-value" style="font-size: 0.85rem;">{{ profile.tts_model or 'Default' }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Target Audience -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Target Audience</h2>
-                <p class="text-gray-600 text-sm">{{ profile.target_audience or 'Not specified' }}</p>
+            <div class="card section-card">
+                <h2 class="section-title" style="margin-bottom: var(--space-md);">
+                    <i class="fas fa-bullseye"></i> Target Audience
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    {{ profile.target_audience or 'Not specified' }}
+                </p>
             </div>
 
             <!-- Topics to Avoid -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Topics to Avoid</h2>
-                    <a href="/profiles/{{ profile.id }}/topics" class="text-purple-600 hover:text-purple-800 text-sm">
+            <div class="card section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-ban"></i> Topics to Avoid
+                    </h2>
+                    <a href="/profiles/{{ profile.id }}/topics" class="btn btn-ghost btn-sm">
                         Manage
                     </a>
                 </div>
 
                 {% if avoided_topics %}
-                <div class="space-y-2">
+                <div class="avoid-list">
                     {% for topic in avoided_topics[:5] %}
-                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                        <span class="text-sm text-gray-700">{{ topic.keyword }}</span>
-                        <span class="text-xs px-2 py-0.5 rounded
-                            {% if topic.avoidance_type == 'permanent' %}bg-red-100 text-red-600
-                            {% else %}bg-amber-100 text-amber-600{% endif %}">
-                            {{ topic.avoidance_type }}
-                        </span>
+                    <div class="avoid-item">
+                        <span>{{ topic.keyword }}</span>
+                        <span class="avoid-type {{ topic.avoidance_type }}">{{ topic.avoidance_type }}</span>
                     </div>
                     {% endfor %}
+                    {% if avoided_topics|length > 5 %}
+                    <p style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: var(--space-sm);">
+                        +{{ avoided_topics|length - 5 }} more
+                    </p>
+                    {% endif %}
                 </div>
                 {% else %}
-                <p class="text-gray-500 text-sm">No topics in avoidance list</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">No topics in avoidance list</p>
                 {% endif %}
             </div>
 
             <!-- Categories -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
-                <div class="flex flex-wrap gap-2">
-                    {% for cat in profile.categories or [] %}
-                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">{{ cat }}</span>
+            {% if profile.categories %}
+            <div class="card section-card">
+                <h2 class="section-title" style="margin-bottom: var(--space-md);">
+                    <i class="fas fa-tags"></i> Categories
+                </h2>
+                <div class="category-tags">
+                    {% for cat in profile.categories %}
+                    <span class="category-tag">{{ cat }}</span>
                     {% endfor %}
                 </div>
+            </div>
+            {% endif %}
+
+            <!-- Danger Zone -->
+            <div class="card section-card" style="border-color: var(--error);">
+                <h2 class="section-title" style="color: var(--error); margin-bottom: var(--space-md);">
+                    <i class="fas fa-exclamation-triangle"></i> Danger Zone
+                </h2>
+                <form method="POST" action="/profiles/{{ profile.id }}/delete" class="delete-form">
+                    <button type="submit" class="btn btn-error" style="width: 100%;"
+                            data-confirm-title="Delete Podcast?"
+                            data-confirm-message="This will permanently delete '{{ profile.name }}' and all its episodes, newsletters, and settings. This cannot be undone.">
+                        <i class="fas fa-trash"></i> Delete Podcast
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function toggleSource(sourceId, toggle) {
+        const isActive = toggle.classList.contains('active');
+
+        try {
+            const response = await fetch(`/profiles/{{ profile.id }}/sources/${sourceId}/toggle`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                toggle.classList.toggle('active');
+                showToast('success', 'Source Updated', isActive ? 'Source disabled' : 'Source enabled');
+            } else {
+                showToast('error', 'Error', 'Failed to update source');
+            }
+        } catch (error) {
+            showToast('error', 'Error', 'Failed to update source');
+        }
+    }
+
+    // Enhanced delete confirmation using modal
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const title = btn.dataset.confirmTitle || 'Confirm Delete';
+            const message = btn.dataset.confirmMessage || 'Are you sure? This cannot be undone.';
+
+            const confirmed = await showConfirm({
+                title: title,
+                message: message,
+                type: 'error',
+                confirmText: 'Delete',
+                cancelText: 'Cancel'
+            });
+
+            if (confirmed) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+                form.submit();
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -2,269 +2,1055 @@
 
 {% block title %}{{ episode.title }} - Podcast Studio{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Audio Player */
+    .audio-player {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+    }
+
+    .player-top {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xl);
+        margin-bottom: var(--space-lg);
+    }
+
+    .play-button {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: white;
+        color: #667eea;
+        border: none;
+        font-size: 1.75rem;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .play-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    }
+
+    .play-button.playing {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+        50% { box-shadow: 0 4px 30px rgba(255,255,255,0.3); }
+    }
+
+    .play-button i {
+        margin-left: 4px;
+    }
+
+    .play-button.playing i {
+        margin-left: 0;
+    }
+
+    .player-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .player-label {
+        font-size: 0.8rem;
+        opacity: 0.85;
+        margin-bottom: var(--space-xs);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .player-label .live-dot {
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+    }
+
+    .player-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin-bottom: var(--space-xs);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .player-podcast {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+        margin-bottom: var(--space-md);
+    }
+
+    .progress-track {
+        width: 100%;
+        height: 8px;
+        background: rgba(255,255,255,0.25);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-track:hover {
+        height: 10px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: white;
+        border-radius: var(--radius-full);
+        position: relative;
+        transition: width 0.1s linear;
+    }
+
+    .progress-buffered {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: rgba(255,255,255,0.3);
+        border-radius: var(--radius-full);
+    }
+
+    .progress-thumb {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .progress-container:hover .progress-thumb {
+        opacity: 1;
+    }
+
+    /* Player Controls */
+    .player-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .time-display {
+        font-size: 0.85rem;
+        font-family: 'SF Mono', Monaco, monospace;
+        opacity: 0.9;
+    }
+
+    .control-buttons {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 1.25rem;
+        opacity: 0.8;
+        transition: opacity 0.2s, transform 0.2s;
+        padding: var(--space-sm);
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .control-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .speed-btn {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        padding: var(--space-xs) var(--space-md);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: background 0.2s;
+        min-height: 32px;
+    }
+
+    .speed-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .volume-container {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .volume-slider {
+        width: 80px;
+        height: 4px;
+        border-radius: var(--radius-full);
+        background: rgba(255,255,255,0.3);
+        appearance: none;
+        cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+    }
+
+    /* No Audio State */
+    .no-audio {
+        background: var(--bg-tertiary);
+        border: 2px dashed var(--border-color);
+    }
+
+    /* Content Sections */
+    .content-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--space-sm);
+    }
+
+    .content-tab {
+        padding: var(--space-sm) var(--space-lg);
+        border: none;
+        background: none;
+        color: var(--text-secondary);
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    .content-tab:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+
+    .content-tab.active {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Transcript */
+    .transcript-container {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        line-height: 1.9;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .transcript-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .transcript-container::-webkit-scrollbar-track {
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+    }
+
+    .transcript-container::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: var(--radius-full);
+    }
+
+    /* Topics */
+    .topic-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        transition: all var(--transition-fast);
+    }
+
+    .topic-tag:hover {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    /* Episode Meta */
+    .episode-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-tertiary);
+    }
+
+    .meta-value {
+        font-weight: 500;
+    }
+
+    /* Actions */
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-md);
+    }
+
+    /* Dropdown */
+    .dropdown {
+        position: relative;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        min-width: 200px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        z-index: 100;
+        display: none;
+        margin-top: var(--space-xs);
+    }
+
+    .dropdown.open .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: background var(--transition-fast);
+    }
+
+    .dropdown-item:hover {
+        background: var(--bg-secondary);
+    }
+
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: var(--space-xs) 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .player-top {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .player-title {
+            font-size: 1.1rem;
+        }
+
+        .control-buttons {
+            justify-content: center;
+        }
+
+        .player-controls {
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .volume-container {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
-    <!-- Header -->
-    <div class="flex items-start justify-between">
-        <div class="space-y-1">
-            <div class="flex items-center space-x-2 text-sm text-slate-500 mb-2">
-                <a href="/episodes" class="hover:text-slate-800 transition"><i class="fas fa-arrow-left mr-1"></i>
-                    Episodes</a>
-                <span class="text-slate-300">/</span>
-                <span>{{ episode.episode_id }}</span>
-            </div>
-            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ episode.title }}</h1>
-            <div class="flex items-center text-slate-500 text-sm space-x-4">
+<div class="page-header">
+    <div class="breadcrumbs">
+        <a href="/">Dashboard</a>
+        <span class="separator">/</span>
+        <a href="/episodes">Episodes</a>
+        <span class="separator">/</span>
+        <span class="current">{{ episode.title[:30] }}{% if episode.title|length > 30 %}...{% endif %}</span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+            <h1 class="page-title">{{ episode.title }}</h1>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); color: var(--text-secondary); font-size: 0.9rem; margin-top: var(--space-sm);">
                 {% if profile %}
-                <a href="/profiles/{{ profile.id }}" class="flex items-center hover:text-indigo-600 transition">
-                    <i class="fas fa-user-circle mr-1.5"></i> {{ profile.name }}
+                <a href="/profiles/{{ profile.id }}" style="color: var(--text-secondary); text-decoration: none;">
+                    <i class="fas fa-podcast"></i> {{ profile.name }}
                 </a>
                 {% endif %}
-                <span class="flex items-center">
-                    <i class="fas fa-calendar mr-1.5 "></i> {{ episode.date.strftime('%B %d, %Y') if episode.date else
-                    'Unknown date' }}
+                <span>
+                    <i class="fas fa-calendar"></i> {{ episode.date.strftime('%B %d, %Y') if episode.date else 'Unknown date' }}
                 </span>
+                {% if episode.duration_seconds %}
+                <span>
+                    <i class="fas fa-clock"></i> {{ (episode.duration_seconds // 60) }} min
+                </span>
+                {% endif %}
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            {% if profile %}
-            <a href="/profiles/{{ profile.id }}/generate"
-                class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-100 transition">
-                <i class="fas fa-plus mr-2"></i> New Episode
-            </a>
-            {% endif %}
 
-            <form method="POST" action="/episodes/{{ episode.id }}/delete" class="inline"
-                onsubmit="return confirm('Delete this episode? This cannot be undone.')">
-                <button type="submit"
-                    class="bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
-                    <i class="fas fa-trash"></i>
+        <div style="display: flex; gap: var(--space-sm);">
+            <!-- Export Dropdown -->
+            <div class="dropdown" id="export-dropdown">
+                <button class="btn btn-secondary" onclick="toggleDropdown('export-dropdown')" title="Export">
+                    <i class="fas fa-download"></i>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
                 </button>
-            </form>
-        </div>
-    </div>
+                <div class="dropdown-menu">
+                    {% if episode.audio_path %}
+                    <a href="/episodes/{{ episode.id }}/download" class="dropdown-item">
+                        <i class="fas fa-file-audio"></i> Download MP3
+                    </a>
+                    {% endif %}
+                    <a href="#" onclick="exportTranscript('txt')" class="dropdown-item">
+                        <i class="fas fa-file-alt"></i> Export Transcript (.txt)
+                    </a>
+                    <a href="#" onclick="exportTranscript('md')" class="dropdown-item">
+                        <i class="fab fa-markdown"></i> Export Markdown (.md)
+                    </a>
+                    {% if episode.newsletter %}
+                    <a href="/newsletters/{{ episode.newsletter.id }}" class="dropdown-item">
+                        <i class="fas fa-newspaper"></i> View Newsletter
+                    </a>
+                    {% endif %}
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="exportAll()" class="dropdown-item">
+                        <i class="fas fa-file-archive"></i> Export All Files
+                    </a>
+                </div>
+            </div>
 
-    <!-- Audio Player (Waveform) -->
-    {% if episode.audio_path %}
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-                <button id="playPauseBtn"
-                    class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200">
-                    <i class="fas fa-play text-xl ml-1"></i>
+            <!-- Share Dropdown -->
+            <div class="dropdown" id="share-dropdown">
+                <button class="btn btn-secondary" onclick="toggleDropdown('share-dropdown')" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
                 </button>
-                <div>
-                    <h3 class="font-bold text-slate-900">Episode Audio</h3>
-                    <p class="text-xs text-slate-500 font-mono tracking-wide" id="timeDisplay">00:00 / {{
-                        (episode.duration_seconds // 60) }}:{{ '%02d' % (episode.duration_seconds % 60) if
-                        episode.duration_seconds else '00:00' }}</p>
-                </div>
-            </div>
-
-            <div class="flex gap-2">
-                <a href="/player/{{ episode.id }}" target="_blank"
-                    class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-slate-700 transition shadow-md">
-                    <i class="fas fa-mobile-alt"></i> Mobile Player
-                </a>
-                <a href="/episodes/{{ episode.id }}/download"
-                    class="text-slate-400 hover:text-indigo-600 transition p-2" title="Download Audio">
-                    <i class="fas fa-download text-lg"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Waveform Container -->
-        <div id="waveform" class="w-full"></div>
-
-        <!-- Hidden audio element for fallback/source -->
-        <audio id="audioElement" class="hidden">
-            <source src="/audio/{{ episode.audio_path.split('/')[-1] }}" type="audio/wav">
-        </audio>
-    </div>
-    {% else %}
-    <div class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-8 text-center">
-        <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
-            <i class="fas fa-volume-mute text-slate-400"></i>
-        </div>
-        <p class="text-slate-500 font-medium">Audio file not found</p>
-    </div>
-    {% endif %}
-
-    <div class="grid lg:grid-cols-3 gap-6">
-        <!-- Main Content (Left, 2 cols) -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Summary -->
-            {% if episode.summary %}
-            <div class="bg-white border border-slate-200 rounded-xl p-6">
-                <h3 class="font-bold text-slate-900 mb-3 flex items-center">
-                    <i class="fas fa-align-left text-slate-400 mr-2"></i> Episode Summary
-                </h3>
-                <p class="text-slate-600 leading-relaxed">{{ episode.summary }}</p>
-            </div>
-            {% endif %}
-
-            <!-- Topics -->
-            {% if topics %}
-            <div class="space-y-4">
-                <h3 class="font-bold text-slate-900 flex items-center px-1">
-                    <i class="fas fa-layer-group text-slate-400 mr-2"></i> Segments & Topics
-                </h3>
-
-                {% for topic in topics %}
-                <div class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-200 transition group">
-                    <div class="flex items-start justify-between mb-2">
-                        <h4 class="font-semibold text-slate-900 group-hover:text-indigo-600 transition">{{ topic.title
-                            }}</h4>
-                        {% if topic.category %}
-                        <span
-                            class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-medium uppercase tracking-wider">{{
-                            topic.category }}</span>
-                        {% endif %}
-                    </div>
-                    {% if topic.summary %}
-                    <p class="text-sm text-slate-500 mb-3">{{ topic.summary }}</p>
-                    {% endif %}
-
-                    {% if topic.key_points %}
-                    <ul class="space-y-1">
-                        {% for point in topic.key_points %}
-                        <li class="flex items-start text-xs text-slate-500">
-                            <i
-                                class="fas fa-check text-indigo-500 mt-0.5 mr-2 opacity-0 group-hover:opacity-100 transition"></i>
-                            <span>{{ point }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Sidebar Content (Right, 1 col) -->
-        <div class="space-y-6">
-            <!-- Key Facts -->
-            {% if episode.key_facts %}
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-                <h3 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">Key Takeaways</h3>
-                <ul class="space-y-3">
-                    {% for fact in episode.key_facts %}
-                    <li class="flex items-start gap-3">
-                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0"></div>
-                        <span class="text-sm text-slate-600">{{ fact }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-
-            <!-- Script Viewer -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col max-h-[600px]">
-                <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900 text-sm">Transcript</h3>
-                    <button onclick="copyScript()" class="text-xs text-indigo-600 font-medium hover:underline">
-                        Copy Text
-                    </button>
-                </div>
-                <div class="overflow-y-auto p-4 bg-white flex-1 custom-scrollbar">
-                    <pre id="scriptText"
-                        class="whitespace-pre-wrap text-xs text-slate-500 font-mono leading-relaxed">{{ episode.script or 'Script not available' }}</pre>
+                <div class="dropdown-menu">
+                    <a href="#" onclick="shareToTwitter()" class="dropdown-item">
+                        <i class="fab fa-twitter"></i> Share on Twitter
+                    </a>
+                    <a href="#" onclick="shareToLinkedIn()" class="dropdown-item">
+                        <i class="fab fa-linkedin"></i> Share on LinkedIn
+                    </a>
+                    <a href="#" onclick="shareToFacebook()" class="dropdown-item">
+                        <i class="fab fa-facebook"></i> Share on Facebook
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" onclick="copyToClipboard()" class="dropdown-item">
+                        <i class="fas fa-link"></i> Copy Link
+                    </a>
+                    <a href="#" onclick="shareEpisode()" class="dropdown-item">
+                        <i class="fas fa-share"></i> More Options...
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        {% if episode.audio_path %}
-        const playBtn = document.getElementById('playPauseBtn');
-        const icon = playBtn.querySelector('i');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const audioPath = "/audio/{{ episode.audio_path.split('/')[-1] }}";
+<div class="page-content" style="max-width: 900px;">
 
-        // Initialize WaveSurfer
-        const wavesurfer = WaveSurfer.create({
-            container: '#waveform',
-            waveColor: '#e2e8f0',
-            progressColor: '#4f46e5',
-            cursorColor: '#4f46e5',
-            barWidth: 2,
-            barGap: 3,
-            barRadius: 3,
-            height: 80,
-            normalize: true,
-            backend: 'WebAudio'
-        });
+    <!-- Audio Player -->
+    {% if episode.audio_path %}
+    <div class="audio-player" id="audio-player">
+        <div class="player-top">
+            <button class="play-button" id="playBtn" onclick="togglePlay()" aria-label="Play/Pause">
+                <i class="fas fa-play"></i>
+            </button>
 
-        wavesurfer.load(audioPath);
+            <div class="player-info">
+                <div class="player-label">
+                    <span class="live-dot" id="playing-indicator" style="display: none;"></span>
+                    <span id="player-status">Ready to play</span>
+                </div>
+                <div class="player-title">{{ episode.title }}</div>
+                {% if profile %}
+                <div class="player-podcast">{{ profile.name }}</div>
+                {% endif %}
+            </div>
+        </div>
 
-        // Play/Pause Toggle
-        playBtn.addEventListener('click', () => {
-            wavesurfer.playPause();
-        });
+        <!-- Progress Bar -->
+        <div class="progress-container" onclick="seekTo(event)">
+            <div class="progress-track" id="progress-track">
+                <div class="progress-buffered" id="buffered-bar" style="width: 0%;"></div>
+                <div class="progress-fill" id="progress-bar" style="width: 0%;">
+                    <div class="progress-thumb"></div>
+                </div>
+            </div>
+        </div>
 
-        // Update UI on state change
-        wavesurfer.on('play', () => {
-            icon.className = 'fas fa-pause text-xl';
-        });
+        <div class="player-controls">
+            <div class="time-display">
+                <span id="currentTime">0:00</span> / <span id="duration">{{ '%d:%02d' % (episode.duration_seconds // 60, episode.duration_seconds % 60) if episode.duration_seconds else '0:00' }}</span>
+            </div>
 
-        wavesurfer.on('pause', () => {
-            icon.className = 'fas fa-play text-xl ml-1';
-        });
+            <div class="control-buttons">
+                <button class="control-btn" onclick="skipBackward()" title="Back 15s" aria-label="Skip back 15 seconds">
+                    <i class="fas fa-undo"></i>
+                </button>
 
-        // Update Timer
-        wavesurfer.on('audioprocess', () => {
-            const time = wavesurfer.getCurrentTime();
-            const minutes = Math.floor(time / 60);
-            const seconds = Math.floor(time % 60);
-            const duration = wavesurfer.getDuration();
-            const dMin = Math.floor(duration / 60);
-            const dSec = Math.floor(duration % 60);
+                <button class="speed-btn" onclick="changeSpeed()" id="speedBtn" title="Playback speed">
+                    1x
+                </button>
 
-            timeDisplay.innerText =
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} / ` +
-                `${String(dMin).padStart(2, '0')}:${String(dSec).padStart(2, '0')}`;
-        });
+                <button class="control-btn" onclick="skipForward()" title="Forward 15s" aria-label="Skip forward 15 seconds">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
 
-        // Initial duration load
-        wavesurfer.on('ready', () => {
-            const duration = wavesurfer.getDuration();
-            const dMin = Math.floor(duration / 60);
-            const dSec = Math.floor(duration % 60);
-            timeDisplay.innerText = `00:00 / ${String(dMin).padStart(2, '0')}:${String(dSec).padStart(2, '0')}`;
-        });
+            <div class="volume-container">
+                <button class="control-btn" onclick="toggleMute()" id="volumeBtn" aria-label="Mute/Unmute">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" aria-label="Volume">
+            </div>
+        </div>
+
+        <audio id="audioPlayer" src="/audio/{{ episode.audio_path.split('/')[-1] if episode.audio_path else '' }}" preload="metadata"></audio>
+    </div>
+    {% else %}
+    <div class="card no-audio">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-volume-mute"></i></div>
+            <div class="empty-state-title">No audio available</div>
+            <p class="text-secondary" style="margin-bottom: var(--space-lg);">This episode hasn't been generated yet or audio generation failed.</p>
+            {% if profile %}
+            <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary">
+                <i class="fas fa-play"></i> Generate Episode
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Content Tabs -->
+    {% if episode.description or episode.summary or episode.topics_covered %}
+    <div class="card" style="margin-bottom: var(--space-xl);">
+        <div class="content-tabs" role="tablist">
+            {% if episode.description or episode.summary %}
+            <button class="content-tab active" onclick="switchTab('transcript')" role="tab" aria-selected="true">
+                <i class="fas fa-file-alt"></i> Transcript
+            </button>
+            {% endif %}
+            {% if episode.topics_covered %}
+            <button class="content-tab {% if not (episode.description or episode.summary) %}active{% endif %}" onclick="switchTab('topics')" role="tab">
+                <i class="fas fa-tags"></i> Topics
+            </button>
+            {% endif %}
+            <button class="content-tab" onclick="switchTab('info')" role="tab">
+                <i class="fas fa-info-circle"></i> Details
+            </button>
+        </div>
+
+        <!-- Transcript Tab -->
+        {% if episode.description or episode.summary %}
+        <div id="tab-transcript" class="tab-content active" role="tabpanel">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-md);">
+                <button class="btn btn-ghost btn-sm" onclick="copyTranscript()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="transcript-container" id="transcript">
+                {{ episode.description or episode.summary }}
+            </div>
+        </div>
         {% endif %}
+
+        <!-- Topics Tab -->
+        {% if episode.topics_covered %}
+        <div id="tab-topics" class="tab-content {% if not (episode.description or episode.summary) %}active{% endif %}" role="tabpanel">
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
+                {% for topic in episode.topics_covered %}
+                <span class="topic-tag">
+                    <i class="fas fa-hashtag" style="opacity: 0.5;"></i>
+                    {{ topic }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Info Tab -->
+        <div id="tab-info" class="tab-content" role="tabpanel">
+            <div class="episode-meta-grid">
+                <div class="meta-item">
+                    <span class="meta-label">Created</span>
+                    <span class="meta-value">{{ episode.created_at.strftime('%B %d, %Y at %I:%M %p') if episode.created_at else 'Unknown' }}</span>
+                </div>
+                {% if episode.duration_seconds %}
+                <div class="meta-item">
+                    <span class="meta-label">Duration</span>
+                    <span class="meta-value">{{ (episode.duration_seconds // 60) }} minutes {{ episode.duration_seconds % 60 }} seconds</span>
+                </div>
+                {% endif %}
+                {% if profile %}
+                <div class="meta-item">
+                    <span class="meta-label">Podcast</span>
+                    <span class="meta-value">{{ profile.name }}</span>
+                </div>
+                {% endif %}
+                <div class="meta-item">
+                    <span class="meta-label">Episode ID</span>
+                    <span class="meta-value" style="font-family: monospace;">{{ episode.id }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Newsletter -->
+    {% if episode.newsletter %}
+    <div class="card" style="margin-bottom: var(--space-xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-xs);">
+                    <i class="fas fa-newspaper" style="color: var(--accent); margin-right: var(--space-sm);"></i>
+                    Newsletter Available
+                </h3>
+                <p class="text-secondary text-sm">A companion newsletter was generated for this episode.</p>
+            </div>
+            <a href="/newsletters/{{ episode.newsletter.id }}" class="btn btn-primary">
+                View Newsletter <i class="fas fa-arrow-right" style="margin-left: var(--space-sm);"></i>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="card">
+        <h3 style="font-weight: 600; margin-bottom: var(--space-lg);">Actions</h3>
+        <div class="action-grid">
+            {% if profile %}
+            <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Generate New Episode
+            </a>
+            {% endif %}
+
+            {% if has_research and not episode.newsletter %}
+            <form method="POST" action="/episodes/{{ episode.id }}/generate_newsletter" style="display: contents;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-newspaper"></i>
+                    Create Newsletter
+                </button>
+            </form>
+            {% endif %}
+
+            <button class="btn btn-secondary" onclick="deleteEpisode()" style="color: var(--error);">
+                <i class="fas fa-trash"></i>
+                Delete Episode
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form (Hidden) -->
+<form id="delete-form" method="POST" action="/episodes/{{ episode.id }}/delete" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Audio Player
+    const audio = document.getElementById('audioPlayer');
+    const playBtn = document.getElementById('playBtn');
+    const progressBar = document.getElementById('progress-bar');
+    const bufferedBar = document.getElementById('buffered-bar');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeBtn = document.getElementById('volumeBtn');
+    const playerStatus = document.getElementById('player-status');
+    const playingIndicator = document.getElementById('playing-indicator');
+
+    let currentSpeed = 1;
+    const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+    // Play/Pause
+    function togglePlay() {
+        if (!audio) return;
+
+        if (audio.paused) {
+            audio.play();
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            playBtn.classList.add('playing');
+            playerStatus.textContent = 'Now playing';
+            playingIndicator.style.display = 'block';
+        } else {
+            audio.pause();
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            playBtn.classList.remove('playing');
+            playerStatus.textContent = 'Paused';
+            playingIndicator.style.display = 'none';
+        }
+    }
+
+    // Skip Functions
+    function skipBackward() {
+        if (audio) audio.currentTime = Math.max(0, audio.currentTime - 15);
+    }
+
+    function skipForward() {
+        if (audio) audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 15);
+    }
+
+    // Speed Control
+    function changeSpeed() {
+        const currentIndex = speeds.indexOf(currentSpeed);
+        currentSpeed = speeds[(currentIndex + 1) % speeds.length];
+        if (audio) audio.playbackRate = currentSpeed;
+        document.getElementById('speedBtn').textContent = currentSpeed + 'x';
+        showToast('info', 'Playback Speed', `${currentSpeed}x`);
+    }
+
+    // Seek
+    function seekTo(event) {
+        if (!audio || !audio.duration) return;
+        const track = document.getElementById('progress-track');
+        const rect = track.getBoundingClientRect();
+        const percent = (event.clientX - rect.left) / rect.width;
+        audio.currentTime = percent * audio.duration;
+    }
+
+    // Volume Control
+    function toggleMute() {
+        if (!audio) return;
+        audio.muted = !audio.muted;
+        updateVolumeIcon();
+    }
+
+    function updateVolumeIcon() {
+        if (!audio) return;
+        const icon = volumeBtn.querySelector('i');
+        if (audio.muted || audio.volume === 0) {
+            icon.className = 'fas fa-volume-mute';
+        } else if (audio.volume < 0.5) {
+            icon.className = 'fas fa-volume-down';
+        } else {
+            icon.className = 'fas fa-volume-up';
+        }
+    }
+
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            if (audio) {
+                audio.volume = e.target.value / 100;
+                updateVolumeIcon();
+            }
+        });
+    }
+
+    // Time Update
+    if (audio) {
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration) return;
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            const minutes = Math.floor(audio.currentTime / 60);
+            const seconds = Math.floor(audio.currentTime % 60);
+            currentTimeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            const minutes = Math.floor(audio.duration / 60);
+            const seconds = Math.floor(audio.duration % 60);
+            durationEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+
+        audio.addEventListener('progress', () => {
+            if (audio.buffered.length > 0) {
+                const buffered = (audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100;
+                bufferedBar.style.width = `${buffered}%`;
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            playBtn.classList.remove('playing');
+            playerStatus.textContent = 'Finished';
+            playingIndicator.style.display = 'none';
+        });
+
+        audio.addEventListener('error', () => {
+            playerStatus.textContent = 'Error loading audio';
+            showToast('error', 'Audio Error', 'Could not load the audio file');
+        });
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch(e.code) {
+            case 'Space':
+                e.preventDefault();
+                togglePlay();
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                skipBackward();
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                skipForward();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                if (audio) {
+                    audio.volume = Math.min(1, audio.volume + 0.1);
+                    volumeSlider.value = audio.volume * 100;
+                    updateVolumeIcon();
+                }
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                if (audio) {
+                    audio.volume = Math.max(0, audio.volume - 0.1);
+                    volumeSlider.value = audio.volume * 100;
+                    updateVolumeIcon();
+                }
+                break;
+            case 'KeyM':
+                toggleMute();
+                break;
+        }
     });
 
-    function copyScript() {
-        const text = document.getElementById('scriptText').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert('Script copied to clipboard!');
+    // Tab Switching
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.content-tab').forEach(tab => {
+            tab.classList.remove('active');
+            tab.setAttribute('aria-selected', 'false');
+        });
+        event.target.classList.add('active');
+        event.target.setAttribute('aria-selected', 'true');
+
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        const tabContent = document.getElementById(`tab-${tabName}`);
+        if (tabContent) {
+            tabContent.classList.add('active');
+        }
+    }
+
+    // Copy Transcript
+    function copyTranscript() {
+        const transcript = document.getElementById('transcript');
+        if (!transcript) return;
+
+        navigator.clipboard.writeText(transcript.textContent).then(() => {
+            showToast('success', 'Copied!', 'Transcript copied to clipboard');
+        }).catch(() => {
+            showToast('error', 'Copy Failed', 'Could not copy transcript');
+        });
+    }
+
+    // Share Episode
+    // Dropdown Toggle
+    function toggleDropdown(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        const wasOpen = dropdown.classList.contains('open');
+
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+
+        // Toggle this one
+        if (!wasOpen) {
+            dropdown.classList.add('open');
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+        }
+    });
+
+    // Export Functions
+    function exportTranscript(format) {
+        const transcript = document.querySelector('.transcript-text')?.textContent || '{{ episode.summary or episode.description or "No transcript available" }}';
+        const title = '{{ episode.title }}';
+        const date = '{{ episode.date.strftime("%Y-%m-%d") if episode.date else "unknown" }}';
+
+        let content, mimeType, extension;
+
+        if (format === 'md') {
+            content = `# ${title}\n\n**Date:** ${date}\n\n## Transcript\n\n${transcript}`;
+            mimeType = 'text/markdown';
+            extension = 'md';
+        } else {
+            content = `${title}\nDate: ${date}\n\n${transcript}`;
+            mimeType = 'text/plain';
+            extension = 'txt';
+        }
+
+        downloadFile(content, `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${extension}`, mimeType);
+        showToast('success', 'Export Complete', `Transcript exported as .${extension}`);
+    }
+
+    function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportAll() {
+        showToast('info', 'Preparing Export', 'Downloading all files...');
+        // Trigger audio download if available
+        {% if episode.audio_path %}
+        window.location.href = '/episodes/{{ episode.id }}/download';
+        {% endif %}
+        // Also export transcript
+        setTimeout(() => exportTranscript('txt'), 500);
+    }
+
+    // Social Share Functions
+    function shareToTwitter() {
+        const text = encodeURIComponent('Check out this podcast episode: {{ episode.title }}');
+        const url = encodeURIComponent(window.location.href);
+        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+        showToast('info', 'Opening Twitter', 'Share dialog opening...');
+    }
+
+    function shareToLinkedIn() {
+        const url = encodeURIComponent(window.location.href);
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+        showToast('info', 'Opening LinkedIn', 'Share dialog opening...');
+    }
+
+    function shareToFacebook() {
+        const url = encodeURIComponent(window.location.href);
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+        showToast('info', 'Opening Facebook', 'Share dialog opening...');
+    }
+
+    function shareEpisode() {
+        const shareData = {
+            title: '{{ episode.title }}',
+            text: 'Listen to this podcast episode',
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData).catch(() => {
+                copyToClipboard();
+            });
+        } else {
+            copyToClipboard();
+        }
+    }
+
+    function copyToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showToast('success', 'Link Copied!', 'Share URL copied to clipboard');
+        });
+    }
+
+    // Delete Episode
+    async function deleteEpisode() {
+        const confirmed = await showConfirm({
+            type: 'error',
+            title: 'Delete Episode?',
+            message: 'This action cannot be undone. The episode and all associated data will be permanently deleted.',
+            confirmText: 'Delete',
+            cancelText: 'Keep'
+        });
+
+        if (confirmed) {
+            document.getElementById('delete-form').submit();
+        }
+    }
+
+    // Save playback position
+    if (audio) {
+        const episodeId = {{ episode.id }};
+        const savedTime = localStorage.getItem('episode-' + episodeId + '-time');
+        if (savedTime && parseFloat(savedTime) > 0) {
+            audio.currentTime = parseFloat(savedTime);
+        }
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('episode-' + episodeId + '-time', audio.currentTime);
         });
     }
 </script>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f5f9;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-</style>
 {% endblock %}

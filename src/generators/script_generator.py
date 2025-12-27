@@ -81,8 +81,8 @@ class ScriptGenerator:
     """
 
     # System prompt for script generation
-    SYSTEM_PROMPT = """You are a podcast script writer for "Desi Daily", a daily news and discussion
-podcast for the South Asian immigrant community in the United States.
+    SYSTEM_PROMPT = """You are a podcast script writer for "{podcast_name}", a daily news and discussion
+podcast.
 
 You write natural, conversational dialogue between two hosts:
 - RAJ: A pragmatic tech professional who immigrated 10 years ago. He focuses on practical advice,
@@ -104,17 +104,17 @@ Guidelines:
 9. Total script should be conversational and engaging, not dry news reading
 
 Output format: Return ONLY valid JSON with this structure:
-{
-  "intro": [{"speaker": "raj" or "priya", "text": "..."}],
+{{
+  "intro": [{{"speaker": "raj" or "priya", "text": "..."}}],
   "segments": [
-    {
+    {{
       "topic_id": "...",
       "topic_title": "...",
-      "dialogue": [{"speaker": "raj" or "priya", "text": "..."}]
-    }
+      "dialogue": [{{"speaker": "raj" or "priya", "text": "..."}}]
+    }}
   ],
-  "outro": [{"speaker": "raj" or "priya", "text": "..."}]
-}"""
+  "outro": [{{"speaker": "raj" or "priya", "text": "..."}}]
+}}"""
 
     def __init__(self, api_key: str, model_name: str = "gemini-2.0-flash"):
         genai.configure(api_key=api_key)
@@ -126,6 +126,7 @@ Output format: Return ONLY valid JSON with this structure:
         topics: list[PodcastTopic],
         episode_date: Optional[datetime] = None,
         target_duration_minutes: int = 12,
+        podcast_name: str = "Podcast",
     ) -> PodcastScript:
         """Generate a complete podcast script from topics"""
 
@@ -142,11 +143,14 @@ Output format: Return ONLY valid JSON with this structure:
         topics_info = self._format_topics_for_prompt(topics)
         logger.debug(f"Topics formatted for prompt:\n{topics_info[:500]}...")
 
-        prompt = f"""{self.SYSTEM_PROMPT}
+        # Format system prompt with podcast name
+        system_prompt = self.SYSTEM_PROMPT.format(podcast_name=podcast_name)
+
+        prompt = f"""{system_prompt}
 
 ---
 
-Generate a podcast script for Desi Daily - {day_of_week}, {date_str}
+Generate a podcast script for {podcast_name} - {day_of_week}, {date_str}
 
 Target duration: {target_duration_minutes} minutes (aim for ~{target_duration_minutes * 150} words total)
 
@@ -200,7 +204,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
 
             # Build the PodcastScript object
             episode_id = f"dd-{episode_date.strftime('%Y%m%d')}"
-            episode_title = self._generate_episode_title(topics, episode_date)
+            episode_title = self._generate_episode_title(topics, episode_date, podcast_name)
 
             # Parse intro
             intro_lines = [
@@ -264,7 +268,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
             logger.error(f"Full traceback:\n{traceback.format_exc()}")
             # Return a fallback script
             logger.info("Generating fallback script...")
-            return self._generate_fallback_script(topics, episode_date)
+            return self._generate_fallback_script(topics, episode_date, podcast_name)
 
     def _format_topics_for_prompt(self, topics: list[PodcastTopic]) -> str:
         """Format topics into a readable string for the prompt"""
@@ -386,7 +390,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
         return normalized
 
     def _generate_episode_title(
-        self, topics: list[PodcastTopic], episode_date: datetime
+        self, topics: list[PodcastTopic], episode_date: datetime, podcast_name: str = "Podcast"
     ) -> str:
         """Generate an episode title"""
         date_str = episode_date.strftime("%b %d")
@@ -400,10 +404,10 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
         else:
             main_topic = "Daily Update"
 
-        return f"{main_topic} | Desi Daily - {date_str}"
+        return f"{main_topic} | {podcast_name} - {date_str}"
 
     def _generate_fallback_script(
-        self, topics: list[PodcastTopic], episode_date: datetime
+        self, topics: list[PodcastTopic], episode_date: datetime, podcast_name: str = "Podcast"
     ) -> PodcastScript:
         """Generate a basic fallback script if AI generation fails"""
         date_str = episode_date.strftime("%B %d, %Y")
@@ -411,7 +415,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
         intro = [
             DialogueLine(
                 speaker="raj",
-                text=f"Good morning everyone! Welcome to Desi Daily for {date_str}. I'm Raj."
+                text=f"Good morning everyone! Welcome to {podcast_name} for {date_str}. I'm Raj."
             ),
             DialogueLine(
                 speaker="priya",
@@ -445,7 +449,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
         outro = [
             DialogueLine(
                 speaker="priya",
-                text="That's all for today's episode! Thanks for listening to Desi Daily."
+                text=f"That's all for today's episode! Thanks for listening to {podcast_name}."
             ),
             DialogueLine(
                 speaker="raj",
@@ -455,7 +459,7 @@ Speaker must be lowercase "raj" or "priya". Return ONLY the JSON, no markdown co
 
         return PodcastScript(
             episode_id=f"dd-{episode_date.strftime('%Y%m%d')}",
-            episode_title=f"Daily Update | Desi Daily - {episode_date.strftime('%b %d')}",
+            episode_title=f"Daily Update | {podcast_name} - {episode_date.strftime('%b %d')}",
             episode_date=episode_date.isoformat(),
             duration_estimate=600,
             intro=intro,

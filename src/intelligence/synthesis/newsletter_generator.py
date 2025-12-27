@@ -78,60 +78,74 @@ class NewsletterGenerator:
     Complements the podcast script generator - same research, different format.
     """
 
-    SECTION_PROMPT = """Write a newsletter section about this topic. Make it engaging, informative, and scannable.
-
-Topic: {headline}
-Summary: {summary}
-
-Key facts:
-{facts}
-
-Expert opinions:
-{opinions}
-
-WRITING STYLE:
-- Start with a strong hook that grabs attention
-- Use short paragraphs (2-3 sentences max)
-- Include bullet points for key information
-- Bold important phrases for scanning
-- End with a clear takeaway or insight
-- Professional but conversational tone
-- No fluff - every sentence adds value
-
-TARGET: ~{words} words
-
-Write in markdown format. Start directly with the content, no section headers."""
-
-    INTRO_PROMPT = """Write a newsletter intro that hooks readers immediately.
-
-Newsletter: {title}
-Date: {date}
-Theme: {theme}
-
-Topics covered:
-{topics_preview}
-
-REQUIREMENTS:
-- 2-3 short paragraphs
-- Start with what's most interesting/important
-- Tease the best insights without giving everything away
-- Create urgency to keep reading
-- ~60-80 words
-
-Write in markdown. Be direct and compelling."""
-
-    OUTRO_PROMPT = """Write a brief newsletter outro.
-
-Newsletter: {title}
-Topics covered: {topics_summary}
-
-REQUIREMENTS:
-- Quick recap of key insights (1-2 sentences)
-- Simple call to action (share, reply, etc.)
-- ~40-60 words
-- Warm but professional
-
-Write in markdown. Keep it short."""
+    SECTION_PROMPT = """Write a deep-dive newsletter section about this topic.
+    
+    CONTEXT:
+    Newsletter Name: {newsletter_name}
+    Target Audience: {audience}
+    Tone: {tone}
+    
+    TOPIC: {headline}
+    SUMMARY: {summary}
+    
+    KEY FACTS FROM RESEARCH:
+    {facts}
+    
+    EXPERT OPINIONS:
+    {opinions}
+    
+    INSTRUCTIONS:
+    Write a compelling, journalistic narrative about this topic. Do NOT just list facts. weave them into a story.
+    
+    STRUCTURE:
+    1. The Hook: Start with why this matters NOW.
+    2. The Analysis: Explain the "what" and the "why". Use the facts to support your analysis.
+    3. The Expert View: Integrate the expert opinions naturally (e.g., "As TechCrunch notes...", "Experts suggest...").
+    4. The Takeaway: Conclude with what the reader should do or think about this.
+    
+    STYLE GUIDELINES:
+    - Write like a top-tier Substack writer (e.g., Ben Thompson, Casey Newton).
+    - Be opinionated but grounded in facts.
+    - Use short, punchy paragraphs.
+    - Use bolding for emphasis, but don't overdo it.
+    - NO generic transitions ("Let's dive in", "In conclusion").
+    - If facts are missing, acknowledge the uncertainty rather than making things up.
+    
+    Length: ~{words} words.
+    Format: Markdown. No H1/H2 headers (this is a section). Use ### for sub-points if needed.
+    """
+    
+    INTRO_PROMPT = """Write a shorter, punchier Editor's Note for this newsletter.
+    
+    CONTEXT:
+    Newsletter: {title}
+    Date: {date}
+    Theme: {theme}
+    Audience: {audience}
+    Tone: {tone}
+    
+    TOPICS IN THIS ISSUE:
+    {topics_preview}
+    
+    INSTRUCTIONS:
+    Write a personal, "Letter from the Editor" style intro.
+    - Connect the themes if possible.
+    - If there's a major headline, lead with that.
+    - Be warm, welcoming, but get to the point.
+    - ~100 words max.
+    """
+    
+    OUTRO_PROMPT = """Write a brief sign-off.
+    
+    Newsletter: {title}
+    Tone: {tone}
+    
+    INSTRUCTIONS:
+    - Thank the reader.
+    - Encourage them to listen to the podcast version for more depth.
+    - Ask a thought-provoking question related to the topics.
+    - ~50 words.
+    """
 
     def __init__(self, model: str = "gemini-2.0-flash"):
         self.model = model
@@ -150,20 +164,22 @@ Write in markdown. Keep it short."""
         self,
         bundle: EpisodeResearchBundle,
         newsletter_name: str = "Your Newsletter",
+        audience: str = "General Audience",
+        tone: str = "Professional and engaging",
     ) -> Newsletter:
         """Generate a complete newsletter from research bundle."""
 
         # Generate intro
-        intro = await self._generate_intro(bundle, newsletter_name)
+        intro = await self._generate_intro(bundle, newsletter_name, audience, tone)
 
         # Generate sections
         sections = []
         for i, topic in enumerate(bundle.verified_topics):
-            section = await self._generate_section(topic, i)
+            section = await self._generate_section(topic, i, newsletter_name, audience, tone)
             sections.append(section)
 
         # Generate outro
-        outro = await self._generate_outro(bundle, newsletter_name)
+        outro = await self._generate_outro(bundle, newsletter_name, tone)
 
         # Create newsletter
         newsletter = Newsletter(
@@ -196,26 +212,32 @@ Write in markdown. Keep it short."""
         self,
         topic: VerifiedTopic,
         sequence: int,
+        newsletter_name: str,
+        audience: str,
+        tone: str,
     ) -> NewsletterSection:
         """Generate a single newsletter section."""
         research = topic.researched_topic
 
         # Format facts
         facts = "\n".join([
-            f"- {fact.claim}"
-            for fact in research.verified_facts[:5]
+            f"- {fact.claim} (Source: {fact.source_url})"
+            for fact in research.verified_facts[:8] 
         ]) or "No specific facts available"
 
         # Format opinions
         opinions = "\n".join([
-            f"- {op.expert_name}: \"{op.quote[:150]}...\""
-            for op in research.expert_opinions[:3]
+            f"- {op.expert_name}: \"{op.quote}\""
+            for op in research.expert_opinions[:5]
         ]) or "None available"
 
         # Target ~150 words per section
-        target_words = 150
+        target_words = 250
 
         prompt = self.SECTION_PROMPT.format(
+            newsletter_name=newsletter_name,
+            audience=audience,
+            tone=tone,
             headline=topic.final_headline,
             summary=topic.final_summary,
             facts=facts,
@@ -241,17 +263,21 @@ Write in markdown. Keep it short."""
         self,
         bundle: EpisodeResearchBundle,
         newsletter_name: str,
+        audience: str,
+        tone: str,
     ) -> str:
         """Generate newsletter intro."""
         topics_preview = "\n".join([
             f"- {t.final_headline}"
-            for t in bundle.verified_topics[:4]
+            for t in bundle.verified_topics[:5]
         ])
 
         prompt = self.INTRO_PROMPT.format(
             title=newsletter_name,
             date=bundle.episode_date.strftime("%B %d, %Y"),
             theme=bundle.main_theme or "This Week's Top Stories",
+            audience=audience,
+            tone=tone,
             topics_preview=topics_preview,
         )
 
@@ -261,6 +287,7 @@ Write in markdown. Keep it short."""
         self,
         bundle: EpisodeResearchBundle,
         newsletter_name: str,
+        tone: str,
     ) -> str:
         """Generate newsletter outro."""
         topics_summary = ", ".join([
@@ -271,6 +298,7 @@ Write in markdown. Keep it short."""
         prompt = self.OUTRO_PROMPT.format(
             title=newsletter_name,
             topics_summary=topics_summary,
+            tone=tone,
         )
 
         return await self._generate(prompt)

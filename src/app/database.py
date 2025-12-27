@@ -23,23 +23,75 @@ logger = logging.getLogger(__name__)
 
 # Supabase client singleton
 _supabase_client: Optional[Client] = None
+_supabase_available: bool = False
+_supabase_error: Optional[str] = None
+
+
+class SupabaseNotConfiguredError(Exception):
+    """Raised when Supabase is not properly configured."""
+    pass
+
+
+def is_supabase_available() -> bool:
+    """Check if Supabase is available without raising errors."""
+    global _supabase_available
+    if _supabase_client is not None:
+        return True
+    try:
+        get_supabase()
+        return True
+    except SupabaseNotConfiguredError:
+        return False
+
+
+def get_supabase_error() -> Optional[str]:
+    """Get the error message if Supabase initialization failed."""
+    return _supabase_error
 
 
 def get_supabase() -> Client:
-    """Get or create Supabase client."""
-    global _supabase_client
+    """Get or create Supabase client with validation."""
+    global _supabase_client, _supabase_available, _supabase_error
 
-    if _supabase_client is None:
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_KEY")
-
-        if not url or not key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
-
+    if _supabase_client is not None:
+        return _supabase_client
+    
+    # Check environment variables
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_KEY")
+    
+    missing = []
+    if not url:
+        missing.append("SUPABASE_URL")
+    if not key:
+        missing.append("SUPABASE_SERVICE_KEY")
+    
+    if missing:
+        _supabase_error = f"Missing environment variables: {', '.join(missing)}"
+        _supabase_available = False
+        raise SupabaseNotConfiguredError(
+            f"{_supabase_error}. "
+            "Please set these environment variables to use cloud database features.\n"
+            "Get your credentials at: https://supabase.com/dashboard"
+        )
+    
+    # Validate URL format
+    if not url.startswith("https://"):
+        _supabase_error = "SUPABASE_URL must start with https://"
+        raise SupabaseNotConfiguredError(_supabase_error)
+    
+    try:
         _supabase_client = create_client(url, key)
+        _supabase_available = True
+        _supabase_error = None
         logger.info(f"Connected to Supabase: {url}")
-
-    return _supabase_client
+        return _supabase_client
+    except Exception as e:
+        _supabase_error = f"Failed to connect: {e}"
+        _supabase_available = False
+        raise SupabaseNotConfiguredError(
+            f"Failed to connect to Supabase: {e}"
+        )
 
 
 # ============== Models ==============

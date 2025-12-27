@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Generation Jobs - Podcast Studio{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-card {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        transition: background var(--transition-fast);
+        cursor: pointer;
+    }
+
+    .job-card:hover {
+        background: var(--bg-secondary);
+    }
+
+    .job-card:last-child {
+        border-bottom: none;
+    }
+
+    .job-status-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .job-status-icon.running {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .job-status-icon.completed {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .job-status-icon.failed {
+        background: var(--error-light);
+        color: var(--error);
+    }
+
+    .job-status-icon.pending {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .job-status-icon.cancelled {
+        background: var(--bg-tertiary);
+        color: var(--text-tertiary);
+    }
+
+    .job-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .job-title {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+    }
+
+    .job-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+    }
+
+    .job-progress {
+        width: 200px;
+        flex-shrink: 0;
+    }
+
+    .progress-bar-mini {
+        height: 6px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        margin-bottom: var(--space-xs);
+    }
+
+    .progress-bar-mini-fill {
+        height: 100%;
+        border-radius: var(--radius-full);
+        transition: width 0.5s ease;
+    }
+
+    .progress-bar-mini-fill.running {
+        background: linear-gradient(90deg, var(--accent), #7c3aed);
+    }
+
+    .progress-bar-mini-fill.completed {
+        background: var(--success);
+    }
+
+    .progress-bar-mini-fill.failed {
+        background: var(--error);
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: right;
+    }
+
+    /* Filters */
+    .filter-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: var(--space-sm) var(--space-md);
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        text-decoration: none;
+    }
+
+    .filter-tab:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .filter-tab.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .filter-tab .count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        background: rgba(255,255,255,0.2);
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        margin-left: var(--space-xs);
+    }
+
+    .filter-tab:not(.active) .count {
+        background: var(--bg-tertiary);
+    }
+
+    /* Job Actions */
+    .job-actions {
+        display: flex;
+        gap: var(--space-sm);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .job-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .job-progress {
+            width: 100%;
+        }
+
+        .job-actions {
+            width: 100%;
+        }
+
+        .job-actions .btn {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+            <h1 class="page-title">Generation Jobs</h1>
+            <p class="page-description">Track and manage your podcast generation jobs</p>
+        </div>
+    </div>
+</div>
+
+<div class="page-content">
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="/jobs" class="filter-tab {% if not status_filter %}active{% endif %}">
+            All <span class="count">{{ jobs|length }}</span>
+        </a>
+        <a href="/jobs?status=running" class="filter-tab {% if status_filter == 'running' %}active{% endif %}">
+            <i class="fas fa-spinner fa-spin"></i> Running
+            <span class="count">{{ jobs|selectattr('status', 'equalto', 'running')|list|length }}</span>
+        </a>
+        <a href="/jobs?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">
+            <i class="fas fa-check"></i> Completed
+            <span class="count">{{ jobs|selectattr('status', 'equalto', 'completed')|list|length }}</span>
+        </a>
+        <a href="/jobs?status=failed" class="filter-tab {% if status_filter == 'failed' %}active{% endif %}">
+            <i class="fas fa-times"></i> Failed
+            <span class="count">{{ jobs|selectattr('status', 'equalto', 'failed')|list|length }}</span>
+        </a>
+    </div>
+
+    <!-- Jobs List -->
+    {% if jobs %}
+    <div class="card" style="padding: 0;">
+        {% for job in jobs %}
+        <a href="/jobs/{{ job.job_id }}" class="job-card" style="text-decoration: none; color: inherit;">
+            <!-- Status Icon -->
+            <div class="job-status-icon {{ job.status }}">
+                {% if job.status == 'running' %}
+                <i class="fas fa-spinner fa-spin"></i>
+                {% elif job.status == 'completed' %}
+                <i class="fas fa-check"></i>
+                {% elif job.status == 'failed' %}
+                <i class="fas fa-times"></i>
+                {% elif job.status == 'pending' %}
+                <i class="fas fa-clock"></i>
+                {% else %}
+                <i class="fas fa-ban"></i>
+                {% endif %}
+            </div>
+
+            <!-- Job Info -->
+            <div class="job-info">
+                <div class="job-title">{{ job.profile.name if job.profile else 'Unknown Podcast' }}</div>
+                <div class="job-meta">
+                    <span><i class="fas fa-fingerprint"></i> {{ job.job_id[:12] }}...</span>
+                    <span><i class="fas fa-calendar"></i> {{ job.created_at.strftime('%b %d, %Y %I:%M %p') if job.created_at else 'Unknown' }}</span>
+                    {% if job.current_stage %}
+                    <span><i class="fas fa-cog"></i> {{ job.current_stage|replace('_', ' ')|title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="job-progress">
+                <div class="progress-bar-mini">
+                    <div class="progress-bar-mini-fill {{ job.status }}" style="width: {{ job.progress_percent or 0 }}%;"></div>
+                </div>
+                <div class="progress-text">
+                    {% if job.status == 'completed' %}
+                    Complete
+                    {% elif job.status == 'failed' %}
+                    Failed
+                    {% elif job.status == 'cancelled' %}
+                    Cancelled
+                    {% else %}
+                    {{ job.progress_percent or 0 }}%
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status Badge & Actions -->
+            <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                <span class="badge badge-{% if job.status == 'completed' %}success{% elif job.status == 'failed' %}error{% elif job.status == 'running' %}info{% elif job.status == 'pending' %}warning{% else %}warning{% endif %}">
+                    {{ job.status|title }}
+                </span>
+                {% if job.status in ['failed', 'cancelled'] %}
+                <form action="/jobs/{{ job.job_id }}/retry" method="POST" style="display: inline;" onclick="event.stopPropagation();">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-primary" title="Retry this job">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-tasks"></i></div>
+            <div class="empty-state-title">No jobs found</div>
+            <p class="text-secondary" style="margin-bottom: var(--space-lg);">
+                {% if status_filter %}
+                No {{ status_filter }} jobs at the moment.
+                {% else %}
+                Generate your first podcast episode to see jobs here.
+                {% endif %}
+            </p>
+            <a href="/profiles" class="btn btn-primary">
+                <i class="fas fa-podcast"></i>
+                View Podcasts
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh if there are running jobs
+    {% if jobs|selectattr('status', 'equalto', 'running')|list|length > 0 %}
+    setTimeout(() => location.reload(), 5000);
+    {% endif %}
+</script>
+{% endblock %}

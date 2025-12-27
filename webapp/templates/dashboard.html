@@ -2,176 +2,651 @@
 
 {% block title %}Dashboard - Podcast Studio{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-lg);
+        margin-bottom: var(--space-2xl);
+    }
+
+    .stat-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-icon.podcasts {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .stat-icon.episodes {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .stat-icon.running {
+        background: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .stat-icon.newsletters {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    /* Podcast Cards */
+    .podcast-card {
+        cursor: pointer;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .podcast-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .podcast-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent) 0%, #7c3aed 100%);
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+    }
+
+    .podcast-card:hover::before {
+        opacity: 1;
+    }
+
+    .podcast-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        background: var(--accent-light);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: var(--space-md);
+    }
+
+    .podcast-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+    }
+
+    .podcast-desc {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: var(--space-lg);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .podcast-meta {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+        margin-bottom: var(--space-lg);
+    }
+
+    .podcast-meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    /* Running Jobs */
+    .running-job {
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+    }
+
+    .running-job:hover {
+        background: var(--bg-secondary);
+    }
+
+    .running-job:last-child {
+        border-bottom: none;
+    }
+
+    .job-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--space-md);
+    }
+
+    .job-title {
+        font-weight: 500;
+    }
+
+    .job-stage {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: var(--space-xs);
+    }
+
+    .job-progress {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .job-percent {
+        font-weight: 600;
+        color: var(--accent);
+        min-width: 50px;
+        text-align: right;
+    }
+
+    .job-bar {
+        flex: 1;
+        height: 8px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+    }
+
+    .job-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, #7c3aed 100%);
+        border-radius: var(--radius-full);
+        transition: width 0.5s ease;
+        position: relative;
+    }
+
+    .job-bar-fill::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--success-light);
+        color: var(--success);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        border-radius: var(--radius-sm);
+    }
+
+    .live-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* Episode List */
+    .episode-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        transition: background var(--transition-fast);
+    }
+
+    .episode-item:hover {
+        background: var(--bg-secondary);
+    }
+
+    .episode-item:last-child {
+        border-bottom: none;
+    }
+
+    .episode-play {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: transform var(--transition-fast), background var(--transition-fast);
+    }
+
+    .episode-play:hover {
+        background: var(--accent-hover);
+        transform: scale(1.05);
+    }
+
+    .episode-play.disabled {
+        background: var(--bg-tertiary);
+        color: var(--text-tertiary);
+        cursor: default;
+    }
+
+    .episode-play.disabled:hover {
+        transform: none;
+    }
+
+    .episode-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .episode-title {
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .episode-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-card {
+            padding: var(--space-md);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8">
-    <!-- Header -->
-    <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-            <p class="text-slate-500 mt-1">Overview of your podcast production pipeline</p>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-description">Manage your AI-powered podcasts</p>
         </div>
-        <a href="/profiles/new"
-            class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition flex items-center shadow-sm font-medium text-sm">
-            <i class="fas fa-plus mr-2"></i> New Profile
+        <a href="/profiles/new" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus"></i>
+            Create Podcast
         </a>
     </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Active Profiles</p>
-                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ profiles|length }}</p>
-                </div>
-                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
-                    <i class="fas fa-microphone-alt text-indigo-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Total Episodes</p>
-                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ recent_episodes|length }}</p>
-                </div>
-                <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
-                    <i class="fas fa-layer-group text-blue-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Running Jobs</p>
-                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ running_jobs|length }}</p>
-                </div>
-                <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center">
-                    <i class="fas fa-sync fa-spin text-amber-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs uppercase tracking-wide font-semibold">Weekly Yield</p>
-                    <p class="text-3xl font-bold text-slate-800 mt-1">{{ recent_episodes|selectattr('date')|list|length
-                        }}</p>
-                </div>
-                <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
-                    <i class="fas fa-calendar-check text-emerald-600"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        <!-- Profiles List -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold text-slate-800">Your Portfolios</h2>
-                <a href="/profiles" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
-            </div>
-
-            {% if profiles %}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for profile in profiles %}
-                <div
-                    class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-300 transition group relative overflow-hidden">
-                    <!-- Accent Bar -->
-                    <div
-                        class="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition">
-                    </div>
-
-                    <div class="flex items-start justify-between mb-3">
-                        <h3 class="font-semibold text-slate-900 group-hover:text-indigo-700 transition">{{ profile.name
-                            }}</h3>
-                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                            <i class="fas fa-podcast text-slate-400"></i>
-                        </div>
-                    </div>
-
-                    <p class="text-slate-500 text-sm mb-4 line-clamp-2 h-10">{{ profile.description }}</p>
-
-                    <div class="flex items-center gap-4 text-xs text-slate-400 mb-5">
-                        <span class="flex items-center"><i class="fas fa-clock mr-1.5 opacity-70"></i> {{
-                            profile.target_duration_minutes }}m</span>
-                        <span class="flex items-center"><i class="fas fa-users mr-1.5 opacity-70"></i> {{
-                            profile.hosts|length }}</span>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <a href="/profiles/{{ profile.id }}/generate"
-                            class="flex-1 bg-slate-900 text-white py-2 rounded-lg text-xs font-medium text-center hover:bg-slate-800 transition">
-                            Generate
-                        </a>
-                        <a href="/profiles/{{ profile.id }}"
-                            class="px-3 bg-slate-100 text-slate-600 py-2 rounded-lg text-xs font-medium hover:bg-slate-200 transition">
-                            <i class="fas fa-cog"></i>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
-                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-microphone-slash text-slate-300 text-2xl"></i>
-                </div>
-                <h3 class="text-slate-900 font-medium mb-1">No Profiles Yet</h3>
-                <p class="text-slate-500 text-sm mb-4">Create your first podcast persona to get started.</p>
-                <a href="/profiles/new"
-                    class="inline-flex items-center text-indigo-600 font-medium text-sm hover:underline">
-                    Create Profile <i class="fas fa-arrow-right ml-1"></i>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Recent Activity Feed -->
-        <div class="space-y-6">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold text-slate-800">Recent Productions</h2>
-                <a href="/episodes" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
-            </div>
-
-            <div
-                class="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-                {% if recent_episodes %}
-                {% for episode in recent_episodes[:5] %}
-                <div class="p-4 hover:bg-slate-50 transition flex justify-between group">
-                    <div class="flex gap-3">
-                        <div
-                            class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition">
-                            <i class="fas fa-play text-indigo-600 text-sm ml-0.5"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <a href="/episodes/{{ episode.id }}"
-                                class="text-sm font-medium text-slate-900 block truncate group-hover:text-indigo-700 transition">{{
-                                episode.title }}</a>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-xs text-slate-500">{{ episode.date.strftime('%b %d') }}</span>
-                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span class="text-xs text-slate-500">{{ (episode.duration_seconds or 0) // 60 }}
-                                    min</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <a href="/episodes/{{ episode.id }}" class="text-slate-300 hover:text-indigo-600 transition"><i
-                                class="fas fa-chevron-right text-xs"></i></a>
-                    </div>
-                </div>
-                {% endfor %}
-                {% else %}
-                <div class="p-8 text-center text-slate-500 text-sm">
-                    No episodes generated yet.
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 </div>
+
+<div class="page-content">
+    {% if needs_setup %}
+    <!-- Setup Wizard Banner -->
+    <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; margin-bottom: var(--space-xl);">
+        <div style="display: flex; align-items: flex-start; gap: var(--space-lg);">
+            <div style="font-size: 2rem; color: #d97706;"><i class="fas fa-exclamation-triangle"></i></div>
+            <div style="flex: 1;">
+                <h3 style="font-weight: 600; color: #92400e; margin-bottom: var(--space-sm);">Setup Required</h3>
+                <p style="color: #78350f; margin-bottom: var(--space-md);">
+                    Before you can generate podcasts, you need to configure your API keys. At minimum, you need a <strong>Gemini API key</strong> for content generation.
+                </p>
+                <div style="display: flex; gap: var(--space-md);">
+                    <a href="/settings" class="btn btn-primary">
+                        <i class="fas fa-key"></i> Configure API Keys
+                    </a>
+                    <a href="https://aistudio.google.com/apikey" target="_blank" class="btn btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> Get Free Gemini Key
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon podcasts">
+                <i class="fas fa-podcast"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ profiles|length }}</div>
+                <div class="stat-label">Podcasts</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon episodes">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_episodes or recent_episodes|length }}</div>
+                <div class="stat-label">Episodes</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon running">
+                <i class="fas fa-sync-alt{% if running_jobs %} fa-spin{% endif %}"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ running_jobs|length }}</div>
+                <div class="stat-label">Running</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon newsletters">
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ newsletter_count or 0 }}</div>
+                <div class="stat-label">Newsletters</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Running Jobs (if any) -->
+    {% if running_jobs %}
+    <div style="margin-bottom: var(--space-2xl);">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-spinner fa-spin" style="color: var(--accent); margin-right: var(--space-sm);"></i>
+                Generating Now
+            </h2>
+            <span class="live-badge">Live</span>
+        </div>
+
+        <div class="card" style="padding: 0;" id="running-jobs-container">
+            {% for job in running_jobs %}
+            <div class="running-job" onclick="location.href='/jobs/{{ job.job_id }}'" data-job-id="{{ job.job_id }}">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">{{ job.profile.name if job.profile else 'Podcast' }}</div>
+                        <div class="job-stage">
+                            <i class="fas fa-cog fa-spin" style="margin-right: var(--space-xs);"></i>
+                            {{ job.current_stage|replace('_', ' ')|title if job.current_stage else 'Starting...' }}
+                        </div>
+                    </div>
+                    <span class="badge badge-info">
+                        {{ job.status|title }}
+                    </span>
+                </div>
+
+                <div class="job-progress">
+                    <div class="job-bar">
+                        <div class="job-bar-fill" style="width: {{ job.progress_percent or 0 }}%;"></div>
+                    </div>
+                    <div class="job-percent">{{ job.progress_percent or 0 }}%</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Your Podcasts -->
+    {% if profiles %}
+    <div style="margin-bottom: var(--space-2xl);">
+        <div class="section-header">
+            <h2 class="section-title">Your Podcasts</h2>
+            <a href="/profiles" class="btn btn-ghost btn-sm">
+                View All <i class="fas fa-chevron-right" style="margin-left: var(--space-xs);"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-3">
+            {% for profile in profiles[:6] %}
+            <div class="card podcast-card" onclick="location.href='/profiles/{{ profile.id }}'">
+                <div class="podcast-icon">
+                    <i class="fas fa-podcast"></i>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-xs);">
+                    <h3 class="podcast-name">{{ profile.name }}</h3>
+                    {% if profile.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-warning">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <p class="podcast-desc">
+                    {{ profile.description[:120] + '...' if profile.description and profile.description|length > 120 else profile.description or 'No description yet' }}
+                </p>
+
+                <div class="podcast-meta">
+                    <span class="podcast-meta-item">
+                        <i class="fas fa-clock"></i>
+                        {{ profile.target_duration_minutes or 10 }} min
+                    </span>
+                    <span class="podcast-meta-item">
+                        <i class="fas fa-users"></i>
+                        {{ profile.hosts|length if profile.hosts else 0 }} hosts
+                    </span>
+                    <span class="podcast-meta-item">
+                        <i class="fas fa-rss"></i>
+                        {{ profile.sources|length if profile.sources else 0 }} sources
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: var(--space-sm);">
+                    <a href="/profiles/{{ profile.id }}/generate" class="btn btn-primary" style="flex: 1;" onclick="event.stopPropagation()">
+                        <i class="fas fa-play"></i>
+                        Generate
+                    </a>
+                    <a href="/profiles/{{ profile.id }}" class="btn btn-secondary btn-icon" onclick="event.stopPropagation()" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card" style="margin-bottom: var(--space-2xl);">
+        <div class="empty-state">
+            <div class="empty-state-icon">🎙️</div>
+            <div class="empty-state-title">Create your first podcast</div>
+            <p class="text-secondary" style="margin-bottom: var(--space-lg); max-width: 400px; margin-left: auto; margin-right: auto;">
+                Set up an AI-powered podcast with custom hosts, topics, and content sources. Generate episodes automatically.
+            </p>
+            <a href="/profiles/new" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i>
+                Create Podcast
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Episodes -->
+    {% if recent_episodes %}
+    <div>
+        <div class="section-header">
+            <h2 class="section-title">Recent Episodes</h2>
+            <a href="/episodes" class="btn btn-ghost btn-sm">
+                View All <i class="fas fa-chevron-right" style="margin-left: var(--space-xs);"></i>
+            </a>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            {% for episode in recent_episodes[:8] %}
+            <a href="/episodes/{{ episode.id }}" class="episode-item" style="text-decoration: none; color: inherit;">
+                <div class="episode-play {% if not episode.audio_path %}disabled{% endif %}">
+                    <i class="fas fa-play"></i>
+                </div>
+
+                <div class="episode-info">
+                    <div class="episode-title">{{ episode.title }}</div>
+                    <div class="episode-meta">
+                        {{ episode.profile.name if episode.profile else 'Unknown' }}
+                        •
+                        {{ episode.created_at.strftime('%b %d, %Y') if episode.created_at else 'Unknown' }}
+                        {% if episode.duration_seconds %}
+                        • {{ (episode.duration_seconds / 60)|int }} min
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-sm);">
+                    {% if episode.audio_path %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-volume-up"></i> Audio
+                    </span>
+                    {% endif %}
+                    {% if episode.script %}
+                    <span class="badge badge-info">
+                        <i class="fas fa-file-alt"></i> Script
+                    </span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if running_jobs %}
+<script>
+    // Live update running jobs
+    const POLL_INTERVAL = 3000;
+    let pollTimer = null;
+
+    async function updateRunningJobs() {
+        const container = document.getElementById('running-jobs-container');
+        if (!container) return;
+
+        const jobs = container.querySelectorAll('[data-job-id]');
+
+        for (const jobEl of jobs) {
+            const jobId = jobEl.dataset.jobId;
+
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`);
+                if (!response.ok) continue;
+
+                const job = await response.json();
+
+                // Update progress bar
+                const barFill = jobEl.querySelector('.job-bar-fill');
+                if (barFill) {
+                    barFill.style.width = `${job.progress_percent || 0}%`;
+                }
+
+                // Update percentage
+                const percentEl = jobEl.querySelector('.job-percent');
+                if (percentEl) {
+                    percentEl.textContent = `${job.progress_percent || 0}%`;
+                }
+
+                // Update stage
+                const stageEl = jobEl.querySelector('.job-stage');
+                if (stageEl && job.current_stage) {
+                    stageEl.innerHTML = `<i class="fas fa-cog fa-spin" style="margin-right: var(--space-xs);"></i>${job.current_stage.replace('_', ' ')}`;
+                }
+
+                // If completed/failed, refresh page to update UI
+                if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+                    setTimeout(() => location.reload(), 1000);
+                    return;
+                }
+
+            } catch (error) {
+                console.error('Error updating job:', error);
+            }
+        }
+    }
+
+    // Start polling
+    function startPolling() {
+        pollTimer = setInterval(updateRunningJobs, POLL_INTERVAL);
+    }
+
+    // Stop when leaving page
+    window.addEventListener('beforeunload', () => {
+        if (pollTimer) clearInterval(pollTimer);
+    });
+
+    // Start when page loads
+    document.addEventListener('DOMContentLoaded', startPolling);
+</script>
+{% endif %}
 {% endblock %}

@@ -262,7 +262,8 @@ Return ONLY valid JSON, no markdown."""
             if json_match:
                 try:
                     return json.loads(json_match.group())
-                except:
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse JSON from response: {e}")
                     pass
 
             logger.error("Failed to parse research response")

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletters - Podsan.io Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding-bottom: var(--space-xl);">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-xl);">
+        <div>
+            <h1 style="margin: 0; font-size: 1.75rem;">Newsletters</h1>
+            <p style="color: var(--color-text-secondary); margin-top: 4px;">{{ total }} generated newsletters</p>
+        </div>
+    </div>
+
+    <!-- Newsletters List -->
+    {% if newsletters %}
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="display: flex; flex-direction: column;">
+            {% for newsletter in newsletters %}
+            <div
+                style="padding: var(--space-lg); border-bottom: 1px solid var(--border-color-dim); transition: background-color var(--transition-fast);">
+                <div style="display: flex; align-items: start; justify-content: space-between;">
+                    <div style="flex: 1; min-width: 0; margin-right: var(--space-lg);">
+                        <div
+                            style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+                            <span
+                                style="font-size: 0.75rem; background-color: var(--color-accent-subtle); color: var(--color-accent-primary); padding: 2px 8px; border-radius: var(--border-radius-pill); font-weight: 600;">
+                                {{ newsletter.reading_time_minutes }} min read
+                            </span>
+                            <span style="font-size: 0.875rem; color: var(--color-text-muted);">
+                                {{ newsletter.issue_date.strftime('%B %d, %Y') if newsletter.issue_date else 'Unknown
+                                date' }}
+                            </span>
+                        </div>
+                        <h3 style="margin: 0 0 var(--space-xs) 0; font-size: 1.1rem; font-weight: 600;">
+                            <a href="/newsletters/{{ newsletter.id }}"
+                                style="color: var(--color-text-primary); text-decoration: none;">{{ newsletter.title
+                                }}</a>
+                        </h3>
+                        <p
+                            style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: var(--space-md); line-height: 1.5;">
+                            {{ newsletter.subtitle }}
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-sm); align-self: center;">
+                        <a href="/newsletters/{{ newsletter.id }}" class="btn btn-primary"
+                            style="font-size: 0.875rem; padding: 6px 12px;">
+                            <i class="fas fa-eye" style="margin-right: 6px;"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total > per_page %}
+    <div
+        style="display: flex; justify-content: center; align-items: center; gap: var(--space-md); margin-top: var(--space-xl);">
+        {% if page > 1 %}
+        <a href="/newsletters?page={{ page - 1 }}" class="btn btn-secondary">
+            <i class="fas fa-chevron-left" style="margin-right: 8px;"></i> Previous
+        </a>
+        {% endif %}
+
+        <span style="font-size: 0.875rem; color: var(--color-text-secondary); font-weight: 500;">
+            Page {{ page }} of {{ ((total - 1) // per_page) + 1 }}
+        </span>
+
+        {% if page * per_page < total %} <a href="/newsletters?page={{ page + 1 }}" class="btn btn-secondary">
+            Next <i class="fas fa-chevron-right" style="margin-left: 8px;"></i>
+            </a>
+            {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card" style="text-align: center; padding: var(--space-xl);">
+        <div
+            style="width: 64px; height: 64px; background-color: var(--color-bg-hover); border-radius: 50%; margin: 0 auto var(--space-md) auto; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-newspaper" style="font-size: 1.5rem; color: var(--color-text-muted);"></i>
+        </div>
+        <h3 style="margin-bottom: var(--space-xs);">No Newsletters Yet</h3>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-lg);">
+            Newsletters are generated automatically with your episodes when Deep Research is enabled.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Podcast Studio{% endblock %}
+
+{% block content %}
+<div class="page-content" style="display: flex; align-items: center; justify-content: center; min-height: 60vh;">
+    <div style="text-align: center; max-width: 500px;">
+        <div style="font-size: 120px; font-weight: 700; color: var(--error); line-height: 1;">500</div>
+        <h1 style="font-size: 1.5rem; margin-top: var(--space-lg);">Server Error</h1>
+        <p style="color: var(--text-secondary); margin-top: var(--space-md);">
+            Something went wrong on our end. We're working to fix it.
+        </p>
+        <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius-md); margin-top: var(--space-lg);">
+            <p style="font-size: 0.85rem; color: var(--text-tertiary);">
+                <i class="fas fa-info-circle"></i> If this problem persists, try refreshing the page or contact support.
+            </p>
+        </div>
+        <div style="display: flex; gap: var(--space-md); justify-content: center; margin-top: var(--space-xl);">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Go to Dashboard
+            </a>
+            <a href="javascript:location.reload()" class="btn btn-secondary">
+                <i class="fas fa-redo"></i> Refresh Page
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
