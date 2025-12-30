@@ -424,7 +424,8 @@ class TestSchedulingFlow:
         }
 
         with patch("webapp.app.get_db", return_value=db_session):
-            with patch("webapp.scheduler.update_profile_schedule"):
+            # Patch where the function is imported, not where it's defined
+            with patch.dict("sys.modules", {"webapp.scheduler": MagicMock()}):
                 response = client.post(
                     f"/profiles/{sample_profile.id}/edit",
                     data=schedule_data,
@@ -446,7 +447,8 @@ class TestSchedulingFlow:
         }
 
         with patch("webapp.app.get_db", return_value=db_session):
-            with patch("webapp.scheduler.update_profile_schedule"):
+            # Patch where the function is imported, not where it's defined
+            with patch.dict("sys.modules", {"webapp.scheduler": MagicMock()}):
                 response = client.post(
                     f"/profiles/{sample_profile.id}/edit",
                     data=schedule_data,

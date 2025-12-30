@@ -451,6 +451,64 @@
         gap: var(--space-md);
     }
 
+    /* Mode Toggle */
+    .mode-toggle {
+        display: inline-flex;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-full);
+        padding: 4px;
+    }
+
+    .mode-btn {
+        padding: var(--space-sm) var(--space-xl);
+        border-radius: var(--radius-full);
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .mode-btn.active {
+        background: var(--accent);
+        color: white;
+    }
+
+    .mode-btn:hover:not(.active) {
+        background: var(--bg-tertiary);
+    }
+
+    /* Quick Mode - Hide Advanced Sections */
+    .quick-mode .advanced-only {
+        display: none !important;
+    }
+
+    /* Advanced Mode - Hide Quick-Only Sections */
+    .generate-container:not(.quick-mode) .quick-only {
+        display: none !important;
+    }
+
+    /* Quick Mode - Simplified View */
+    .quick-mode .section-card {
+        margin-bottom: var(--space-md);
+    }
+
+    .quick-mode .generation-steps {
+        display: none;
+    }
+
+    .quick-mode .estimate-card {
+        padding: var(--space-md);
+    }
+
+    .quick-mode .estimate-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     /* Collapsible Sections */
     .collapsible-section {
         border: 1px solid var(--border-color);
@@ -500,7 +558,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="generate-container">
+<div class="generate-container quick-mode" id="generate-container">
     <!-- Header -->
     <div class="generate-header">
         <a href="/profiles/{{ profile.id }}" class="btn btn-ghost" title="Back to podcast">
@@ -513,6 +571,19 @@
             <h1>Generate New Episode</h1>
             <p>{{ profile.name }} - Configure your episode settings</p>
         </div>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-toggle-container" style="display: flex; justify-content: center; margin-bottom: var(--space-xl);">
+        <div class="mode-toggle">
+            <button type="button" class="mode-btn active" data-mode="quick" onclick="setMode('quick')">
+                <i class="fas fa-bolt"></i> Quick Generate
+            </button>
+            <button type="button" class="mode-btn" data-mode="advanced" onclick="setMode('advanced')">
+                <i class="fas fa-cog"></i> Advanced
+            </button>
+        </div>
+        <input type="hidden" name="generation_mode" id="generation-mode" value="quick">
     </div>
 
     <!-- Progress Steps -->
@@ -622,7 +693,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group advanced-only">
                     <label class="form-label">Number of Topics</label>
                     <select name="topic_count" class="form-select" id="topic-count" onchange="updateEstimate()">
                         {% for i in range(2, 10) %}
@@ -667,8 +738,8 @@
         </div>
         {% endif %}
 
-        <!-- Research Settings -->
-        <div class="collapsible-section open">
+        <!-- Research Settings (Advanced Only) -->
+        <div class="collapsible-section open advanced-only">
             <div class="collapsible-header" onclick="toggleSection(this)">
                 <span class="collapsible-title">
                     <i class="fas fa-search"></i>
@@ -726,8 +797,8 @@
             </div>
         </div>
 
-        <!-- AI Model Settings -->
-        <div class="collapsible-section">
+        <!-- AI Model Settings (Advanced Only) -->
+        <div class="collapsible-section advanced-only">
             <div class="collapsible-header" onclick="toggleSection(this)">
                 <span class="collapsible-title">
                     <i class="fas fa-robot"></i>
@@ -757,8 +828,8 @@
             </div>
         </div>
 
-        <!-- Audio Settings -->
-        <div class="collapsible-section">
+        <!-- Audio Settings (Advanced Only) -->
+        <div class="collapsible-section advanced-only">
             <div class="collapsible-header" onclick="toggleSection(this)">
                 <span class="collapsible-title">
                     <i class="fas fa-volume-up"></i>
@@ -795,8 +866,36 @@
             </div>
         </div>
 
-        <!-- Output Options -->
-        <div class="collapsible-section">
+        <!-- Quick Output Options (Quick Mode Only) -->
+        <div class="card section-card quick-only" id="quick-outputs">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-check-circle"></i>
+                    What to Generate
+                </h2>
+            </div>
+            <div style="display: flex; gap: var(--space-xl); flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+                    <input type="checkbox" name="generate_audio_quick" checked style="width: 20px; height: 20px;">
+                    <span><i class="fas fa-headphones" style="color: var(--accent); margin-right: 4px;"></i> Audio Episode</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+                    <input type="checkbox" name="generate_newsletter_quick" checked style="width: 20px; height: 20px;">
+                    <span><i class="fas fa-newspaper" style="color: var(--accent); margin-right: 4px;"></i> Newsletter</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+                    <input type="checkbox" name="generate_transcript_quick" checked style="width: 20px; height: 20px;">
+                    <span><i class="fas fa-file-alt" style="color: var(--accent); margin-right: 4px;"></i> Transcript</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+                    <input type="checkbox" name="include_video_quick" style="width: 20px; height: 20px;">
+                    <span><i class="fas fa-video" style="color: var(--accent); margin-right: 4px;"></i> Video</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Output Options (Advanced Only) -->
+        <div class="collapsible-section advanced-only">
             <div class="collapsible-header" onclick="toggleSection(this)">
                 <span class="collapsible-title">
                     <i class="fas fa-file-export"></i>
@@ -825,6 +924,13 @@
                         <div class="toggle-info">
                             <h4>Generate Newsletter</h4>
                             <p>Create an email newsletter version</p>
+                        </div>
+                    </label>
+                    <label class="toggle-option">
+                        <input type="checkbox" name="include_video">
+                        <div class="toggle-info">
+                            <h4>Generate Video</h4>
+                            <p>Create MP4 video with waveform and subtitles</p>
                         </div>
                     </label>
                     <label class="toggle-option">
@@ -860,6 +966,57 @@
 
 {% block extra_js %}
 <script>
+    // Mode toggle (Quick vs Advanced)
+    function setMode(mode) {
+        const container = document.getElementById('generate-container');
+        const modeInput = document.getElementById('generation-mode');
+        const modeBtns = document.querySelectorAll('.mode-btn');
+
+        // Update container class
+        if (mode === 'quick') {
+            container.classList.add('quick-mode');
+        } else {
+            container.classList.remove('quick-mode');
+        }
+
+        // Update hidden input
+        modeInput.value = mode;
+
+        // Update button states
+        modeBtns.forEach(btn => {
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Sync checkboxes between quick and advanced modes
+        if (mode === 'quick') {
+            // Copy advanced to quick
+            syncCheckbox('generate_audio', 'generate_audio_quick');
+            syncCheckbox('generate_newsletter', 'generate_newsletter_quick');
+            syncCheckbox('generate_transcript', 'generate_transcript_quick');
+            syncCheckbox('include_video', 'include_video_quick');
+        } else {
+            // Copy quick to advanced
+            syncCheckbox('generate_audio_quick', 'generate_audio');
+            syncCheckbox('generate_newsletter_quick', 'generate_newsletter');
+            syncCheckbox('generate_transcript_quick', 'generate_transcript');
+            syncCheckbox('include_video_quick', 'include_video');
+        }
+
+        updateEstimate();
+    }
+
+    function syncCheckbox(sourceName, targetName) {
+        const source = document.querySelector(`input[name="${sourceName}"]`);
+        const target = document.querySelector(`input[name="${targetName}"]`);
+        if (source && target) {
+            target.checked = source.checked;
+        }
+    }
+
     // Duration slider
     function updateDuration(value) {
         const minutes = parseInt(value);
@@ -931,6 +1088,14 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         updateDuration(document.getElementById('duration-slider').value);
+
+        // Add change listeners for quick mode checkboxes
+        document.querySelectorAll('#quick-outputs input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                syncCheckbox(cb.name, cb.name.replace('_quick', ''));
+                updateEstimate();
+            });
+        });
     });
 
     // Form submission
@@ -938,6 +1103,15 @@
         const btn = document.getElementById('generate-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+
+        // Before submit, sync quick mode values to advanced (which are the actual form fields)
+        const mode = document.getElementById('generation-mode').value;
+        if (mode === 'quick') {
+            syncCheckbox('generate_audio_quick', 'generate_audio');
+            syncCheckbox('generate_newsletter_quick', 'generate_newsletter');
+            syncCheckbox('generate_transcript_quick', 'generate_transcript');
+            syncCheckbox('include_video_quick', 'include_video');
+        }
     });
 </script>
 {% endblock %}

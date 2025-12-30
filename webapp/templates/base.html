@@ -26,7 +26,7 @@
 
             --text-primary: #1a1a1a;
             --text-secondary: #6c757d;
-            --text-tertiary: #868e96;
+            --text-tertiary: #5a6268;  /* WCAG AA compliant: 5.74:1 contrast ratio */
 
             --border-color: #dee2e6;
             --border-hover: #ced4da;
@@ -419,6 +419,58 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+            cursor: pointer;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-tertiary);
+            transition: all var(--transition-fast);
+            border-radius: var(--radius-full);
+        }
+
+        .toggle-slider::before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: all var(--transition-fast);
+            border-radius: 50%;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--success);
+        }
+
+        .toggle input:checked + .toggle-slider::before {
+            transform: translateX(22px);
+        }
+
+        .toggle input:focus + .toggle-slider {
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
         /* Form Elements */
         .form-group {
             margin-bottom: var(--space-lg);
@@ -548,6 +600,26 @@
             font-size: 0.8rem;
             color: var(--text-tertiary);
             margin-top: var(--space-xs);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: var(--space-sm) 0;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .checkbox-label span {
+            user-select: none;
         }
 
         .form-error {
@@ -1019,6 +1091,7 @@
         .text-error { color: var(--error); }
         .text-sm { font-size: 0.85rem; }
         .text-xs { font-size: 0.75rem; }
+        .capitalize { text-transform: capitalize; }
 
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
@@ -1049,6 +1122,35 @@
             width: 1px;
             height: 1px;
             overflow: hidden;
+        }
+
+        /* Global Focus Styles - WCAG 2.4.7 Compliance */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Interactive elements focus styles */
+        .episode-play:focus-visible,
+        .chapter-item:focus-visible,
+        .podcast-card:focus-visible,
+        .running-job:focus-visible,
+        .episode-item:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px var(--accent-light);
+        }
+
+        /* Clickable divs should have focus indication */
+        [onclick]:focus-visible,
+        [role="button"]:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Remove default outline for mouse users */
+        :focus:not(:focus-visible) {
+            outline: none;
         }
     </style>
 
@@ -1102,28 +1204,34 @@
             </div>
 
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Main</div>
+                <!-- Home - No section header needed -->
                 <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}" {% if request.path == '/' %}aria-current="page"{% endif %}>
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
+
+                <div class="nav-section-title" style="margin-top: var(--space-md);">Studio</div>
                 <a href="/profiles" class="nav-item {% if '/profiles' in request.path %}active{% endif %}" {% if '/profiles' in request.path %}aria-current="page"{% endif %}>
                     <i class="fas fa-podcast"></i>
                     <span>Podcasts</span>
                 </a>
-                <a href="/episodes" class="nav-item {% if '/episodes' in request.path and '/profiles' not in request.path %}active{% endif %}">
-                    <i class="fas fa-microphone"></i>
-                    <span>Episodes</span>
+                <a href="/jobs" class="nav-item {% if '/jobs' in request.path %}active{% endif %}">
+                    <i class="fas fa-spinner"></i>
+                    <span>Generation Jobs</span>
                 </a>
 
-                <div class="nav-section-title" style="margin-top: var(--space-md);">Content</div>
+                <div class="nav-section-title" style="margin-top: var(--space-md);">Library</div>
+                <a href="/episodes" class="nav-item {% if '/episodes' in request.path and '/profiles' not in request.path %}active{% endif %}">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Episodes</span>
+                </a>
                 <a href="/newsletters" class="nav-item {% if '/newsletters' in request.path %}active{% endif %}">
                     <i class="fas fa-newspaper"></i>
                     <span>Newsletters</span>
                 </a>
-                <a href="/jobs" class="nav-item {% if '/jobs' in request.path %}active{% endif %}">
-                    <i class="fas fa-tasks"></i>
-                    <span>Jobs</span>
+                <a href="/analytics" class="nav-item {% if '/analytics' in request.path %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
                 </a>
             </nav>
 
